@@ -1,0 +1,252 @@
+2025-05-05 12:09:49,876 - INFO - Starting bags3_1.py script
+2025-05-05 12:09:49,876 - INFO - Using provided output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25
+2025-05-05 12:09:49,876 - INFO - Looking for tiled images in output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25
+2025-05-05 12:09:49,877 - INFO - Found complete tiled image set for goldendoodledoggie
+2025-05-05 12:09:49,877 - INFO - Found 1 sets of tiled images
+2025-05-05 12:09:49,877 - INFO - Processing additional bag templates for 1 images
+2025-05-05 12:09:49,877 - INFO - Output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3
+2025-05-05 12:09:49,879 - INFO - Processing bag templates for goldendoodledoggie
+2025-05-05 12:09:49,879 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:09:52,936 - INFO - Photoshop has been closed
+2025-05-05 12:09:52,936 - INFO - Processing Bag 4 template for goldendoodledoggie
+2025-05-05 12:09:52,938 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag4_script.jsx
+2025-05-05 12:09:52,938 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-05 12:09:52,938 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:09:56,000 - INFO - Photoshop has been closed
+2025-05-05 12:09:56,015 - INFO - Photoshop process started. Waiting for completion...
+2025-05-05 12:10:10,686 - INFO - Photoshop finished with return code: 0
+2025-05-05 12:10:15,687 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:10:18,771 - INFO - Photoshop has been closed
+2025-05-05 12:10:18,771 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag4.png
+2025-05-05 12:10:18,772 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag4.png (size: 3165565 bytes)
+2025-05-05 12:10:18,772 - INFO - Successfully created Bag 4 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag4.png
+2025-05-05 12:10:18,772 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:10:21,863 - INFO - Photoshop has been closed
+2025-05-05 12:10:23,863 - INFO - Processing Bag 5 template for goldendoodledoggie
+2025-05-05 12:10:23,867 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag5_script.jsx
+2025-05-05 12:10:23,867 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-05 12:10:23,868 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:10:26,931 - INFO - Photoshop has been closed
+2025-05-05 12:10:26,944 - INFO - Photoshop process started. Waiting for completion...
+2025-05-05 12:10:41,612 - INFO - Photoshop finished with return code: 0
+2025-05-05 12:10:46,612 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:10:49,695 - INFO - Photoshop has been closed
+2025-05-05 12:10:49,695 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag5.png
+2025-05-05 12:10:49,695 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag5.png (size: 3165565 bytes)
+2025-05-05 12:10:49,696 - INFO - Successfully created Bag 5 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag5.png
+2025-05-05 12:10:49,696 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:10:52,770 - INFO - Photoshop has been closed
+2025-05-05 12:10:54,771 - INFO - Processing Bag 6 template for goldendoodledoggie
+2025-05-05 12:10:54,772 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag6_script.jsx
+2025-05-05 12:10:54,773 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-05 12:10:54,773 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:10:57,836 - INFO - Photoshop has been closed
+2025-05-05 12:10:57,845 - INFO - Photoshop process started. Waiting for completion...
+2025-05-05 12:11:13,401 - INFO - Photoshop finished with return code: 0
+2025-05-05 12:11:18,401 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:11:21,462 - INFO - Photoshop has been closed
+2025-05-05 12:11:21,462 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag6.png
+2025-05-05 12:11:21,462 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag6.png (size: 3165565 bytes)
+2025-05-05 12:11:21,462 - INFO - Successfully created Bag 6 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3\goldendoodledoggie_bag6.png
+2025-05-05 12:11:21,462 - INFO - Ensuring Photoshop is closed...
+2025-05-05 12:11:24,535 - INFO - Photoshop has been closed
+2025-05-05 12:11:24,535 - INFO - Completed processing, generated 3 files
+2025-05-05 12:11:24,535 - INFO - Successfully processed 3 bag mockups
+2025-05-05 12:11:24,615 - INFO - Starting bags3_1.py script
+2025-05-05 12:11:24,615 - INFO - Using provided output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25
+2025-05-05 12:11:24,615 - INFO - Looking for tiled images in output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25
+2025-05-05 12:11:24,616 - INFO - Found complete tiled image set for goldendoodledoggie
+2025-05-05 12:11:24,616 - INFO - Found 1 sets of tiled images
+2025-05-05 12:11:24,616 - INFO - Processing additional bag templates for 1 images
+2025-05-05 12:11:24,616 - INFO - Output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-05_12-04-25\bags3
+2025-05-05 12:11:24,616 - INFO - Processing bag templates for goldendoodledoggie
+2025-05-05 12:11:24,616 - INFO - All bag mockups already exist for goldendoodledoggie, skipping
+2025-05-05 12:11:24,616 - INFO - Completed processing, generated 3 files
+2025-05-05 12:11:24,616 - INFO - Successfully processed 3 bag mockups
+2025-05-13 09:38:51,204 - INFO - Starting bags3_1.py script
+2025-05-13 09:38:51,204 - INFO - Using provided output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42
+2025-05-13 09:38:51,204 - INFO - Looking for tiled images in output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42
+2025-05-13 09:38:51,205 - INFO - Found complete tiled image set for DarkTest
+2025-05-13 09:38:51,205 - INFO - Found complete tiled image set for LightTest
+2025-05-13 09:38:51,205 - INFO - Found 2 sets of tiled images
+2025-05-13 09:38:51,205 - INFO - Processing additional bag templates for 2 images
+2025-05-13 09:38:51,205 - INFO - Output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3
+2025-05-13 09:38:51,205 - INFO - Processing bag templates for DarkTest
+2025-05-13 09:38:51,205 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:38:54,301 - INFO - Photoshop has been closed
+2025-05-13 09:38:54,301 - INFO - Processing Bag 4 template for DarkTest
+2025-05-13 09:38:54,302 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag4_script.jsx
+2025-05-13 09:38:54,303 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 09:38:54,303 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:38:57,379 - INFO - Photoshop has been closed
+2025-05-13 09:38:57,392 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:39:13,632 - INFO - Photoshop finished with return code: 0
+2025-05-13 09:39:18,633 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:39:21,702 - INFO - Photoshop has been closed
+2025-05-13 09:39:21,702 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag4.png
+2025-05-13 09:39:21,702 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag4.png (size: 3167360 bytes)
+2025-05-13 09:39:21,702 - INFO - Successfully created Bag 4 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag4.png
+2025-05-13 09:39:21,702 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:39:24,793 - INFO - Photoshop has been closed
+2025-05-13 09:39:26,794 - INFO - Processing Bag 5 template for DarkTest
+2025-05-13 09:39:26,794 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag5_script.jsx
+2025-05-13 09:39:26,794 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 09:39:26,794 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:39:29,889 - INFO - Photoshop has been closed
+2025-05-13 09:39:29,900 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:42:29,906 - ERROR - Photoshop process timed out after 3 minutes
+2025-05-13 09:42:29,906 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:42:33,026 - INFO - Photoshop has been closed
+2025-05-13 09:42:33,026 - INFO - Retrying after timeout (attempt 2/3)...
+2025-05-13 09:42:38,026 - INFO - Running Photoshop script (attempt 2/3)
+2025-05-13 09:42:38,026 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:42:41,134 - INFO - Photoshop has been closed
+2025-05-13 09:42:41,138 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:42:56,928 - INFO - Photoshop finished with return code: 0
+2025-05-13 09:43:01,929 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:04,992 - INFO - Photoshop has been closed
+2025-05-13 09:43:04,992 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag5.png
+2025-05-13 09:43:04,992 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag5.png (size: 3167360 bytes)
+2025-05-13 09:43:04,992 - INFO - Successfully created Bag 5 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag5.png
+2025-05-13 09:43:04,992 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:08,093 - INFO - Photoshop has been closed
+2025-05-13 09:43:10,093 - INFO - Processing Bag 6 template for DarkTest
+2025-05-13 09:43:10,094 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag6_script.jsx
+2025-05-13 09:43:10,094 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 09:43:10,094 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:13,181 - INFO - Photoshop has been closed
+2025-05-13 09:43:13,192 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:43:28,746 - INFO - Photoshop finished with return code: 0
+2025-05-13 09:43:33,746 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:36,810 - INFO - Photoshop has been closed
+2025-05-13 09:43:36,810 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag6.png
+2025-05-13 09:43:36,810 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag6.png (size: 3167360 bytes)
+2025-05-13 09:43:36,811 - INFO - Successfully created Bag 6 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\DarkTest_bag6.png
+2025-05-13 09:43:36,811 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:39,875 - INFO - Photoshop has been closed
+2025-05-13 09:43:39,875 - INFO - Processing bag templates for LightTest
+2025-05-13 09:43:39,875 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:42,965 - INFO - Photoshop has been closed
+2025-05-13 09:43:42,965 - INFO - Processing Bag 4 template for LightTest
+2025-05-13 09:43:42,967 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag4_script.jsx
+2025-05-13 09:43:42,967 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 09:43:42,967 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:43:46,041 - INFO - Photoshop has been closed
+2025-05-13 09:43:46,046 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:44:01,714 - INFO - Photoshop finished with return code: 0
+2025-05-13 09:44:06,714 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:44:09,819 - INFO - Photoshop has been closed
+2025-05-13 09:44:09,820 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag4.png
+2025-05-13 09:44:09,820 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag4.png (size: 3167360 bytes)
+2025-05-13 09:44:09,820 - INFO - Successfully created Bag 4 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag4.png
+2025-05-13 09:44:09,820 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:44:12,907 - INFO - Photoshop has been closed
+2025-05-13 09:44:14,908 - INFO - Processing Bag 5 template for LightTest
+2025-05-13 09:44:14,909 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag5_script.jsx
+2025-05-13 09:44:14,910 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 09:44:14,910 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:44:18,006 - INFO - Photoshop has been closed
+2025-05-13 09:44:18,013 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:44:32,728 - INFO - Photoshop finished with return code: 0
+2025-05-13 09:44:37,728 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:44:40,790 - INFO - Photoshop has been closed
+2025-05-13 09:44:40,790 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag5.png
+2025-05-13 09:44:40,790 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag5.png (size: 3167360 bytes)
+2025-05-13 09:44:40,790 - INFO - Successfully created Bag 5 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag5.png
+2025-05-13 09:44:40,790 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:44:43,879 - INFO - Photoshop has been closed
+2025-05-13 09:44:45,879 - INFO - Processing Bag 6 template for LightTest
+2025-05-13 09:44:45,880 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag6_script.jsx
+2025-05-13 09:44:45,880 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 09:44:45,880 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:44:48,942 - INFO - Photoshop has been closed
+2025-05-13 09:44:48,948 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 09:45:04,674 - INFO - Photoshop finished with return code: 0
+2025-05-13 09:45:09,674 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:45:12,737 - INFO - Photoshop has been closed
+2025-05-13 09:45:12,737 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag6.png
+2025-05-13 09:45:12,737 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag6.png (size: 3167360 bytes)
+2025-05-13 09:45:12,737 - INFO - Successfully created Bag 6 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3\LightTest_bag6.png
+2025-05-13 09:45:12,737 - INFO - Ensuring Photoshop is closed...
+2025-05-13 09:45:15,830 - INFO - Photoshop has been closed
+2025-05-13 09:45:15,830 - INFO - Completed processing, generated 6 files
+2025-05-13 09:45:15,830 - INFO - Successfully processed 6 bag mockups
+2025-05-13 09:45:15,915 - INFO - Starting bags3_1.py script
+2025-05-13 09:45:15,915 - INFO - Using provided output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42
+2025-05-13 09:45:15,915 - INFO - Looking for tiled images in output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42
+2025-05-13 09:45:15,915 - INFO - Found complete tiled image set for DarkTest
+2025-05-13 09:45:15,915 - INFO - Found complete tiled image set for LightTest
+2025-05-13 09:45:15,915 - INFO - Found 2 sets of tiled images
+2025-05-13 09:45:15,915 - INFO - Processing additional bag templates for 2 images
+2025-05-13 09:45:15,915 - INFO - Output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_09-24-42\bags3
+2025-05-13 09:45:15,915 - INFO - Processing bag templates for DarkTest
+2025-05-13 09:45:15,915 - INFO - All bag mockups already exist for DarkTest, skipping
+2025-05-13 09:45:15,915 - INFO - Processing bag templates for LightTest
+2025-05-13 09:45:15,915 - INFO - All bag mockups already exist for LightTest, skipping
+2025-05-13 09:45:15,915 - INFO - Completed processing, generated 6 files
+2025-05-13 09:45:15,915 - INFO - Successfully processed 6 bag mockups
+2025-05-13 11:04:47,640 - INFO - Starting bags3_1.py script
+2025-05-13 11:04:47,640 - INFO - Using provided output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26
+2025-05-13 11:04:47,640 - INFO - Looking for tiled images in output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26
+2025-05-13 11:04:47,640 - INFO - Found complete tiled image set for sheepdogtest
+2025-05-13 11:04:47,640 - INFO - Found 1 sets of tiled images
+2025-05-13 11:04:47,640 - INFO - Processing additional bag templates for 1 images
+2025-05-13 11:04:47,640 - INFO - Output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3
+2025-05-13 11:04:47,640 - INFO - Processing bag templates for sheepdogtest
+2025-05-13 11:04:47,640 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:04:50,742 - INFO - Photoshop has been closed
+2025-05-13 11:04:50,742 - INFO - Processing Bag 4 template for sheepdogtest
+2025-05-13 11:04:50,743 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag4_script.jsx
+2025-05-13 11:04:50,743 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 11:04:50,743 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:04:53,807 - INFO - Photoshop has been closed
+2025-05-13 11:04:53,813 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 11:05:23,254 - INFO - Photoshop finished with return code: 0
+2025-05-13 11:05:28,254 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:05:31,338 - INFO - Photoshop has been closed
+2025-05-13 11:05:31,338 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag4.png
+2025-05-13 11:05:31,338 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag4.png (size: 3167360 bytes)
+2025-05-13 11:05:31,338 - INFO - Successfully created Bag 4 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag4.png
+2025-05-13 11:05:31,338 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:05:34,431 - INFO - Photoshop has been closed
+2025-05-13 11:05:36,432 - INFO - Processing Bag 5 template for sheepdogtest
+2025-05-13 11:05:36,435 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag5_script.jsx
+2025-05-13 11:05:36,436 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 11:05:36,436 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:05:39,502 - INFO - Photoshop has been closed
+2025-05-13 11:05:39,507 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 11:06:24,936 - INFO - Photoshop finished with return code: 0
+2025-05-13 11:06:29,937 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:06:33,050 - INFO - Photoshop has been closed
+2025-05-13 11:06:33,050 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag5.png
+2025-05-13 11:06:33,050 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag5.png (size: 3167360 bytes)
+2025-05-13 11:06:33,050 - INFO - Successfully created Bag 5 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag5.png
+2025-05-13 11:06:33,050 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:06:36,162 - INFO - Photoshop has been closed
+2025-05-13 11:06:38,162 - INFO - Processing Bag 6 template for sheepdogtest
+2025-05-13 11:06:38,163 - INFO - Attempting to run JSX script: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag6_script.jsx
+2025-05-13 11:06:38,163 - INFO - Running Photoshop script (attempt 1/3)
+2025-05-13 11:06:38,163 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:06:41,271 - INFO - Photoshop has been closed
+2025-05-13 11:06:41,276 - INFO - Photoshop process started. Waiting for completion...
+2025-05-13 11:07:24,181 - INFO - Photoshop finished with return code: 0
+2025-05-13 11:07:29,181 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:07:32,263 - INFO - Photoshop has been closed
+2025-05-13 11:07:32,263 - INFO - Checking for output file: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag6.png
+2025-05-13 11:07:32,264 - INFO - Successfully verified output PNG: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag6.png (size: 3167360 bytes)
+2025-05-13 11:07:32,264 - INFO - Successfully created Bag 6 mockup: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3\sheepdogtest_bag6.png
+2025-05-13 11:07:32,265 - INFO - Ensuring Photoshop is closed...
+2025-05-13 11:07:35,363 - INFO - Photoshop has been closed
+2025-05-13 11:07:35,363 - INFO - Completed processing, generated 3 files
+2025-05-13 11:07:35,363 - INFO - Successfully processed 3 bag mockups
+2025-05-13 11:07:35,435 - INFO - Starting bags3_1.py script
+2025-05-13 11:07:35,435 - INFO - Using provided output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26
+2025-05-13 11:07:35,435 - INFO - Looking for tiled images in output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26
+2025-05-13 11:07:35,436 - INFO - Found complete tiled image set for sheepdogtest
+2025-05-13 11:07:35,436 - INFO - Found 1 sets of tiled images
+2025-05-13 11:07:35,436 - INFO - Processing additional bag templates for 1 images
+2025-05-13 11:07:35,436 - INFO - Output folder: C:\Users\john\Downloads\Folder_For_Uploader\Output\2025-05-13_10-59-26\bags3
+2025-05-13 11:07:35,436 - INFO - Processing bag templates for sheepdogtest
+2025-05-13 11:07:35,436 - INFO - All bag mockups already exist for sheepdogtest, skipping
+2025-05-13 11:07:35,436 - INFO - Completed processing, generated 3 files
+2025-05-13 11:07:35,436 - INFO - Successfully processed 3 bag mockups

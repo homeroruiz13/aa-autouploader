@@ -1,0 +1,121 @@
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+temp/
+tmp/
+*.tmp
+
+# Node modules (if any)
+node_modules/
+
+# Node
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Large data files (optional - uncomment if you want to exclude)
+# *.csv
+# *.json
+# *.xml
+# *.zip
+# *.tar.gz
+
+# === Project-specific excludes ===
+# Ignore large intermediate/output directories
+Download/
+Output/
+printpanels/output/
+ALLCSVFILES/
+# Ignore temporary and cache directories
+scripts/__pycache__/
+Scripts/__pycache__/
+# Ignore Photoshop/Illustrator template assets > 100MB
+*.psd
+*.ai
+# Ignore generated PDFs and logs
+*.pdf
+*.log
+# Exclude ZIP archives and other large compressed files
+*.zip
+# Allow specific CSVs needed for build (override the general rule, if applied elsewhere)
+!printpanels/csv/meta_file_list.csv
+!printpanels/csv/meta_file_list_tableRunner.csv
+
+# Ignore large JSON data exports
+*.json
+
+# Re-allow essential config manifests
+!package.json
+!package-lock.json
+
+# Ignore font files
+*.ttf
+*.otf
+
+# Ignore PEM/SSH private keys
+*.pem
+*.key
+
+# Exclude backup of previous git history
+.git_bak_large/
+.git_bak_secrets/
+
+# Exclude backup of previous git history
+# -.git_bak_large/
+# +.git_bak_large/
+# +.git_bak_secrets/ 
