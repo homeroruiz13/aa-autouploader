@@ -20,6 +20,8 @@ from config import BASE_FOLDER, DOWNLOAD_BASE_FOLDER, OUTPUT_BASE_FOLDER, BUCKET
 import shutil
 import re
 from bag_s3_uploader import upload_bag_files_to_s3
+from tissue_s3_uploader import upload_tissue_files_to_s3  # NEW: Added tissue uploader import
+import traceback  # NEW: Added for better error logging
 
 # Load environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -50,6 +52,8 @@ logging.basicConfig(
         logging.StreamHandler(sys.stdout)
     ]
 )
+
+logger = logging.getLogger(__name__)  # NEW: Added logger variable
 
 # Load Shopify credentials from environment variables to avoid committing secrets
 SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
@@ -114,7 +118,7 @@ def ensure_photoshop_closed():
 def run_photoshop_jsx():
     """Run the Photoshop JSX script with proper error handling."""
     try:
-        ensure_photoshop_closed()
+        ensure_photeshop_closed()
         
         photoshop_exe = find_photoshop()
         jsx_script_path = os.path.join(os.path.dirname(__file__), "source3.jsx")
@@ -418,7 +422,7 @@ def process_images(csv_data):
                         if result.stdout:
                             logging.debug(result.stdout)
                             
-                        # NEW: Upload bag files to S3 with SKU naming convention
+                        # Upload bag files to S3 with SKU naming convention
                         logging.info("Starting bag file upload to S3...")
                         try:
                             # Pass the products data so we can use the Shopify SKUs
@@ -456,7 +460,65 @@ def process_images(csv_data):
                 else:
                     logging.warning(f"Bag processor script not found at {bag_processor_path}; skipping bag step")
 
-                # After all Photoshop work (regular + (attempted) bags) is done,
+                # NEW: Add tissue processing here
+                logger.info("Starting tissue processing...")
+                try:
+                    # Get the script directory
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    tissue_processor_path = os.path.join(script_dir, "tissue_processor.py")
+                    
+                    if os.path.exists(tissue_processor_path):
+                        # Run tissue processor as a subprocess
+                        result = subprocess.run([
+                            sys.executable, tissue_processor_path
+                        ], capture_output=True, text=True, timeout=900)  # 15 minute timeout
+                        
+                        if result.returncode == 0:
+                            logger.info("Tissue processing completed successfully")
+                            
+                            # Upload tissue files to S3 with SKUs
+                            logger.info("Starting tissue file upload to S3...")
+                            try:
+                                # Pass the products data so we can use the Shopify SKUs
+                                tissue_uploads = upload_tissue_files_to_s3(output_folder, processed_products)
+                                
+                                if tissue_uploads:
+                                    logger.info(f"Successfully uploaded {len(tissue_uploads)} tissue files to S3")
+                                    
+                                    # Log the SKUs for reference
+                                    for upload in tissue_uploads:
+                                        logger.info(f"Uploaded tissue: {upload['sku']} -> {upload['public_url']}")
+                                        
+                                    # Add tissue upload info to processed products for tracking
+                                    for upload in tissue_uploads:
+                                        processed_products.append({
+                                            "file": upload['original_file'],
+                                            "url": upload['public_url'],
+                                            "type": "tissue_output",
+                                            "sku": upload['sku'],
+                                            "base_sku": upload['base_sku'],
+                                            "tissue_type": upload.get('tissue_type', 'unknown'),
+                                            "product_name": upload['product_name']
+                                        })
+                                else:
+                                    logger.warning("No tissue files were uploaded to S3")
+                                    
+                            except Exception as upload_error:
+                                logger.error(f"Error uploading tissue files to S3: {upload_error}")
+                        
+                        else:
+                            logger.error(f"Tissue processing failed with return code {result.returncode}")
+                            logger.error(f"Tissue processor stderr: {result.stderr}")
+                    else:
+                        logger.warning(f"Tissue processor not found at: {tissue_processor_path}")
+                        
+                except subprocess.TimeoutExpired:
+                    logger.error("Tissue processing timed out after 15 minutes")
+                except Exception as e:
+                    logger.error(f"Error in tissue processing: {e}")
+                    # Don't fail the entire process if tissue processing fails
+
+                # After all Photoshop work (regular + (attempted) bags + tissue) is done,
                 # upload every PNG once so there are no duplicates.
                 all_outputs = upload_photoshop_outputs(
                     output_folder,
@@ -468,6 +530,18 @@ def process_images(csv_data):
                 logging.error("Bag processor timed-out after 15 minutes – continuing without bag outputs")
             except Exception as bag_err:
                 logging.error(f"Unexpected error while running bag processor: {bag_err}")
+
+        # NEW: Create CSV file list (from paste.txt)
+        csv_path = os.path.join(BASE_FOLDER, 'printpanels', 'csv', 'meta_file_list.csv')
+        os.makedirs(os.path.dirname(csv_path), exist_ok=True)
+        
+        with open(csv_path, 'w', newline='') as f:
+            writer = csv.writer(f)
+            for product in processed_products:
+                if 'name' in product:  # Only write products with names (not individual file uploads)
+                    writer.writerow([product['name']])
+        
+        logger.info(f"Saved CSV file to: {csv_path}")
 
         # Even if Photoshop failed we still want to emit whatever information we collected so
         # that the rest of the pipeline (Illustrator print-panel generation, etc.) can proceed.
@@ -483,8 +557,9 @@ def process_images(csv_data):
         return
 
     except Exception as e:
-        logging.error(f"Error in process_images: {e}")
-        raise
+        logger.error(f"Error in process_images: {e}")
+        logger.error(traceback.format_exc())  # NEW: Added traceback for better error debugging
+        return False  # NEW: Return False on error
 
 if __name__ == "__main__":
     try:
