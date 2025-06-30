@@ -23,30 +23,31 @@ def get_s3_client():
 def extract_product_id_from_filename(filename):
     """
     Extract the base product ID from filename.
-    Example: "bagstest1_6_bag1.png" -> "bagstest1"
     Example: "ProductName_bag1.png" -> "ProductName"
     """
-    # Remove the bag suffix and extension first
-    base_name = filename.replace('_bag1.png', '').replace('_bag2.png', '').replace('_bag3.png', '')
-    
-    # Also remove any number patterns before bag (e.g., "_6", "_3")
-    base_name = re.sub(r'_\d+$', '', base_name)
-    
+    # Remove all possible bag suffixes and extension
+    base_name = filename
+    for bag_suffix in ['_bag1.png', '_bag2.png', '_bag3.png', '_bag4.png', '_bag5.png', '_bag6.png', '_bag7.png']:
+        base_name = base_name.replace(bag_suffix, '')
     return base_name
 
 def generate_bag_sku(base_sku, bag_number):
     """
     Generate bag SKU by appending bag code to existing Shopify SKU.
-    bag1 = 41, bag2 = 42, bag3 = 43
+    bag1 = 41, bag2 = 42, bag3 = 43, bag4 = 44, bag5 = 45, bag6 = 46, bag7 = 47
     
     Args:
         base_sku: The existing Shopify SKU (e.g., "AA123456")
-        bag_number: bag type (bag1, bag2, bag3)
+        bag_number: bag type (bag1, bag2, bag3, bag4, bag5, bag6, bag7)
     """
     bag_codes = {
         'bag1': '41',
         'bag2': '42', 
-        'bag3': '43'
+        'bag3': '43',
+        'bag4': '44',
+        'bag5': '45',
+        'bag6': '46',
+        'bag7': '47'
     }
     
     return f"{base_sku}{bag_codes[bag_number]}"
@@ -78,7 +79,7 @@ def find_product_by_name(products_data, filename):
     logger.warning(f"No product data found for filename: {filename}")
     return None
 
-def upload_bag_files_to_s3(output_folder, products_data, bucket_name='compoundfoundry'):
+def upload_bag_files_to_s3(output_folder, products_data, bucket_name='aspenarlo'):
     """
     Upload bag files to S3 with proper SKU naming and folder structure.
     
@@ -97,7 +98,7 @@ def upload_bag_files_to_s3(output_folder, products_data, bucket_name='compoundfo
         bag_files = []
         for root, dirs, files in os.walk(output_folder):
             for file in files:
-                if file.endswith(('_bag1.png', '_bag2.png', '_bag3.png')):
+                if file.endswith(('_bag1.png', '_bag2.png', '_bag3.png', '_bag4.png', '_bag5.png', '_bag6.png', '_bag7.png')):
                     bag_files.append(os.path.join(root, file))
         
         logger.info(f"Found {len(bag_files)} bag files to upload")
@@ -117,7 +118,7 @@ def upload_bag_files_to_s3(output_folder, products_data, bucket_name='compoundfo
                     continue
                 
                 # Get the base SKU from Shopify product data
-                base_sku = product_data.get('base_sku') or product_data.get('sku') or product_data.get('shopify_sku')
+                base_sku = product_data.get('sku') or product_data.get('shopify_sku')
                 if not base_sku:
                     logger.error(f"No SKU found in product data for {filename}, skipping")
                     continue
@@ -129,6 +130,14 @@ def upload_bag_files_to_s3(output_folder, products_data, bucket_name='compoundfo
                     bag_type = 'bag2'
                 elif filename.endswith('_bag3.png'):
                     bag_type = 'bag3'
+                elif filename.endswith('_bag4.png'):
+                    bag_type = 'bag4'
+                elif filename.endswith('_bag5.png'):
+                    bag_type = 'bag5'
+                elif filename.endswith('_bag6.png'):
+                    bag_type = 'bag6'
+                elif filename.endswith('_bag7.png'):
+                    bag_type = 'bag7'
                 else:
                     logger.warning(f"Unknown bag type for file: {filename}")
                     continue
@@ -136,8 +145,8 @@ def upload_bag_files_to_s3(output_folder, products_data, bucket_name='compoundfo
                 # Generate bag SKU using the Shopify SKU
                 bag_sku = generate_bag_sku(base_sku, bag_type)
                 
-                # Create S3 key with the new folder structure
-                s3_key = f"aspenarlo/bags/{bag_sku}.png"
+                # Create S3 key - directly in bags folder since we're already in aspenarlo bucket
+                s3_key = f"bags/{bag_sku}.png"
                 
                 logger.info(f"Uploading {filename} as {s3_key} (base SKU: {base_sku})")
                 
@@ -242,22 +251,8 @@ if __name__ == "__main__":
     output_folder = get_most_recent_output_folder()
     
     if output_folder:
-        # For standalone testing, create dummy product data
-        print("⚠️ Running in standalone mode - using dummy product data")
-        print("For actual workflow, this should be called with real product data")
-        
-        # Create dummy product data for testing
-        dummy_products = [
-            {
-                "name": "bagstest1",
-                "handle": "bagstest1", 
-                "base_sku": "AA123456",
-                "s3_url": "..."
-            }
-        ]
-        
         # Upload bag files
-        uploaded_files = upload_bag_files_to_s3(output_folder, dummy_products)
+        uploaded_files = upload_bag_files_to_s3(output_folder)
         
         if uploaded_files:
             print(f"\n✅ Successfully uploaded {len(uploaded_files)} bag files!")
@@ -265,4 +260,4 @@ if __name__ == "__main__":
         else:
             print("❌ No bag files were uploaded")
     else:
-        print("❌ Could not find output folder") 
+        print("❌ Could not find output folder")
