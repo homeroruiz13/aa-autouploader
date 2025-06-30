@@ -118,36 +118,50 @@ def process_csv(csv_path):
         except Exception as e:
             logging.error(f"Error listing download directory: {e}")
             
-        # Process the CSV with the new format: URL, ProductName, Tags...
+        # Process the CSV - handle both formats:
+        # Format 1: Just product names (current): productname
+        # Format 2: URL + ProductName: url,productname,tags...
         image_paths = []
         with open(csv_path, 'r', newline='', encoding='utf-8') as f:
             reader = csv.reader(f)
             row_count = 0
             for row in reader:
                 row_count += 1
-                logging.info(f"Processing CSV row {row_count}: {row[:2] if len(row) >= 2 else row}")
+                logging.info(f"Processing CSV row {row_count}: {row}")
                 
-                if len(row) >= 2:  # Need at least URL and ProductName
-                    url = row[0].strip()
-                    product_name = row[1].strip()
+                if len(row) >= 1 and row[0].strip():  # At least one column with content
+                    # Determine CSV format
+                    if len(row) >= 2 and row[0].startswith('http'):
+                        # Format 2: URL, ProductName, Tags...
+                        url = row[0].strip()
+                        product_name = row[1].strip()
+                        logging.info(f"Found URL+ProductName format: '{product_name}' from {url}")
+                    else:
+                        # Format 1: Just product name
+                        product_name = row[0].strip()
+                        url = None
+                        logging.info(f"Found ProductName-only format: '{product_name}'")
                     
-                    if url and product_name:
+                    if product_name:
                         logging.info(f"Looking for local image for product: '{product_name}'")
 
                         # Create possible filename variations
                         possible_names = []
                         
-                        # 1. Original product name as handle
+                        # 1. Exact product name (as-is)
+                        possible_names.append(product_name)
+                        
+                        # 2. Original product name as handle
                         handle = derive_handle(product_name)
                         possible_names.append(handle)
                         
-                        # 2. Extract filename from S3 URL (the UUID part)
-                        if 'wrappingpaper/new_uploads/' in url:
+                        # 3. If we have S3 URL, extract filename from it
+                        if url and 'wrappingpaper/new_uploads/' in url:
                             s3_filename = url.split('/')[-1]  # Get filename from URL
                             base_name = os.path.splitext(s3_filename)[0]  # Remove .png extension
                             possible_names.append(base_name)
                             
-                        # 3. Try to get AA ID from Shopify
+                        # 4. Try to get AA ID from Shopify
                         try:
                             aa_id = _fetch_aa_id(handle)
                             if aa_id:
@@ -156,7 +170,7 @@ def process_csv(csv_path):
                         except Exception as e:
                             logging.debug(f"Shopify lookup failed for {handle}: {e}")
                         
-                        # 4. Extract any AA ID from product name
+                        # 5. Extract any AA ID from product name
                         aa_match = re.search(r"AA\d{6,8}", product_name, re.IGNORECASE)
                         if aa_match:
                             aa_id = aa_match.group(0).upper()
@@ -189,6 +203,7 @@ def process_csv(csv_path):
                             
                             for variation in variations:
                                 image_path = os.path.join(download_dir, variation)
+                                logging.debug(f"  Checking: {variation}")
                                 if os.path.exists(image_path):
                                     image_paths.append(image_path)
                                     logging.info(f"✓ Found image: {image_path}")
@@ -199,24 +214,27 @@ def process_csv(csv_path):
                             logging.warning(f"✗ No local image found for: {product_name}")
                             logging.warning(f"  Tried variations: {unique_names}")
                             
-                            # As a fallback, try to download from S3 URL
-                            try:
-                                logging.info(f"Attempting to download from S3: {url}")
-                                temp_filename = f"{handle}_6.png"
-                                temp_path = os.path.join(download_dir, temp_filename)
-                                
-                                response = requests.get(url, timeout=30)
-                                response.raise_for_status()
-                                
-                                with open(temp_path, 'wb') as f:
-                                    f.write(response.content)
-                                
-                                image_paths.append(temp_path)
-                                logging.info(f"✓ Downloaded and saved: {temp_path}")
-                                found = True
-                                
-                            except Exception as download_error:
-                                logging.error(f"Failed to download {url}: {download_error}")
+                            # As a fallback, try to download from S3 URL if available
+                            if url:
+                                try:
+                                    logging.info(f"Attempting to download from S3: {url}")
+                                    temp_filename = f"{handle}_6.png"
+                                    temp_path = os.path.join(download_dir, temp_filename)
+                                    
+                                    response = requests.get(url, timeout=30)
+                                    response.raise_for_status()
+                                    
+                                    with open(temp_path, 'wb') as f:
+                                        f.write(response.content)
+                                    
+                                    image_paths.append(temp_path)
+                                    logging.info(f"✓ Downloaded and saved: {temp_path}")
+                                    found = True
+                                    
+                                except Exception as download_error:
+                                    logging.error(f"Failed to download {url}: {download_error}")
+                            else:
+                                logging.warning(f"No S3 URL available for fallback download")
         
         logging.info(f"Found {len(image_paths)} valid image paths out of {row_count} CSV rows")
         
