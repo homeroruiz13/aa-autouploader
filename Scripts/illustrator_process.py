@@ -92,101 +92,144 @@ def get_latest_download_dir():
     logging.info(f"Using download directory: {latest_dir}")
     return latest_dir
 
+def derive_handle(product_name: str) -> str:
+    """Convert product name to handle format (kebab-case)."""
+    slug = re.sub(r'[^a-z0-9]+', '-', product_name.lower())
+    return slug.strip('-')
+
 def process_csv(csv_path):
     """Process the CSV file and return image paths."""
     try:
         logging.info(f"Processing CSV: {csv_path}")
         
-        # Explicitly default to comma as delimiter to avoid the csv.Sniffer picking up the ':'
-        # that appears inside URL schemes (e.g. "https://").  We still try auto-detection first,
-        # but if the detected delimiter is *not* a comma we fall back to a plain comma which is what
-        # all of our feed files use.
-        with open(csv_path, 'r') as f:
-            sample = f.read(1024)
-            try:
-                dialect = csv.Sniffer().sniff(sample)
-                if dialect.delimiter != ',':
-                    logging.warning(
-                        "csv.Sniffer detected '%s' as delimiter – overriding to ',' to "
-                        "avoid splitting on the colon characters inside URLs",
-                        dialect.delimiter,
-                    )
-                    dialect.delimiter = ','
-            except csv.Error:
-                # Could not sniff – default to comma
-                dialect = csv.get_dialect('excel')
-                dialect.delimiter = ','
-            logging.info("Using CSV delimiter: %s", dialect.delimiter)
-        
         # Get the latest download directory
         download_dir = get_latest_download_dir()
         if not download_dir:
             return []
+        
+        # Debug: List all files in the download directory
+        logging.info(f"Files in download directory:")
+        try:
+            all_files = os.listdir(download_dir)
+            png_files = [f for f in all_files if f.endswith('.png')]
+            logging.info(f"Found {len(png_files)} PNG files in download directory:")
+            for file in png_files:
+                logging.info(f"  - {file}")
+        except Exception as e:
+            logging.error(f"Error listing download directory: {e}")
             
-        # Read CSV and get image paths
+        # Process the CSV with the new format: URL, ProductName, Tags...
         image_paths = []
-        with open(csv_path, 'r', newline='') as f:
-            reader = csv.reader(f, dialect)
+        with open(csv_path, 'r', newline='', encoding='utf-8') as f:
+            reader = csv.reader(f)
+            row_count = 0
             for row in reader:
-                if len(row) >= 2:
-                    name = row[1].strip()
+                row_count += 1
+                logging.info(f"Processing CSV row {row_count}: {row[:2] if len(row) >= 2 else row}")
+                
+                if len(row) >= 2:  # Need at least URL and ProductName
+                    url = row[0].strip()
+                    product_name = row[1].strip()
+                    
+                    if url and product_name:
+                        logging.info(f"Looking for local image for product: '{product_name}'")
 
-                    # Detect AA ID anywhere in the name
-                    aa_match = re.search(r"AA\d{6,8}", name, re.IGNORECASE)
-                    aa_id = aa_match.group(0).upper() if aa_match else None
-
-                    if name:
-                        # Extract base SKU and generate possible filename variants
-                        def get_base_sku(sku: str):
-                            for delim in ('-', ' ', '_'):
-                                if delim in sku:
-                                    return sku.split(delim)[0]
-                            return sku
-
-                        base_sku = get_base_sku(name)
-                        possible_names = [name]
-
-                        if aa_id and aa_id not in possible_names:
+                        # Create possible filename variations
+                        possible_names = []
+                        
+                        # 1. Original product name as handle
+                        handle = derive_handle(product_name)
+                        possible_names.append(handle)
+                        
+                        # 2. Extract filename from S3 URL (the UUID part)
+                        if 'wrappingpaper/new_uploads/' in url:
+                            s3_filename = url.split('/')[-1]  # Get filename from URL
+                            base_name = os.path.splitext(s3_filename)[0]  # Remove .png extension
+                            possible_names.append(base_name)
+                            
+                        # 3. Try to get AA ID from Shopify
+                        try:
+                            aa_id = _fetch_aa_id(handle)
+                            if aa_id:
+                                possible_names.append(aa_id)
+                                possible_names.append(f"{aa_id}06")
+                        except Exception as e:
+                            logging.debug(f"Shopify lookup failed for {handle}: {e}")
+                        
+                        # 4. Extract any AA ID from product name
+                        aa_match = re.search(r"AA\d{6,8}", product_name, re.IGNORECASE)
+                        if aa_match:
+                            aa_id = aa_match.group(0).upper()
                             possible_names.append(aa_id)
-
-                        # Variant handles
-                        handle_full = name.lower().replace(' ', '-').replace(',', '')
-                        base_handle = base_sku.lower().replace(' ', '-').replace(',', '')
-
-                        # Also attempt Shopify lookup if no AA detected
-                        if not aa_id:
-                            shopify_aa = _fetch_aa_id(handle_full)
-                            if shopify_aa:
-                                aa_id = shopify_aa
-
-                        for variant in (handle_full, base_sku, base_handle, aa_id or ''):
-                            if variant and variant not in possible_names:
-                                possible_names.append(variant)
-
-                        # Master tiles are saved with "AA123456" or name, but the script later looks
-                        # for <variant>.png.  Add the AA06 filename base as well.
-                        if aa_id:
-                            aa_with_tile = f"{aa_id}06"
-                            if aa_with_tile not in possible_names:
-                                possible_names.append(aa_with_tile)
-
-                        found = False
+                            possible_names.append(f"{aa_id}06")
+                        
+                        # Remove duplicates while preserving order
+                        seen = set()
+                        unique_names = []
                         for pname in possible_names:
-                            image_path = os.path.join(download_dir, f"{pname}.png")
-                            if os.path.exists(image_path):
-                                image_paths.append(image_path)
-                                logging.info(f"Found image: {image_path}")
-                                found = True
+                            if pname and pname not in seen:
+                                seen.add(pname)
+                                unique_names.append(pname)
+                        
+                        logging.info(f"Searching for filename variations: {unique_names}")
+                        
+                        # Search for the image file
+                        found = False
+                        for pname in unique_names:
+                            if found:
                                 break
+                                
+                            # Try different variations
+                            variations = [
+                                f"{pname}_6.png",    # 6x6 tiled version (most common for PDF generation)
+                                f"{pname}.png",      # Original
+                                f"{pname}_6.jpg",
+                                f"{pname}.jpg",
+                            ]
+                            
+                            for variation in variations:
+                                image_path = os.path.join(download_dir, variation)
+                                if os.path.exists(image_path):
+                                    image_paths.append(image_path)
+                                    logging.info(f"✓ Found image: {image_path}")
+                                    found = True
+                                    break
 
                         if not found:
-                            logging.error(f"Image not found for any variant of: {name}")
+                            logging.warning(f"✗ No local image found for: {product_name}")
+                            logging.warning(f"  Tried variations: {unique_names}")
+                            
+                            # As a fallback, try to download from S3 URL
+                            try:
+                                logging.info(f"Attempting to download from S3: {url}")
+                                temp_filename = f"{handle}_6.png"
+                                temp_path = os.path.join(download_dir, temp_filename)
+                                
+                                response = requests.get(url, timeout=30)
+                                response.raise_for_status()
+                                
+                                with open(temp_path, 'wb') as f:
+                                    f.write(response.content)
+                                
+                                image_paths.append(temp_path)
+                                logging.info(f"✓ Downloaded and saved: {temp_path}")
+                                found = True
+                                
+                            except Exception as download_error:
+                                logging.error(f"Failed to download {url}: {download_error}")
         
-        logging.info(f"Found {len(image_paths)} valid image paths")
+        logging.info(f"Found {len(image_paths)} valid image paths out of {row_count} CSV rows")
+        
+        # Debug: Show what we found
+        for path in image_paths:
+            logging.info(f"  Valid image: {os.path.basename(path)}")
+        
         return image_paths
         
     except Exception as e:
         logging.error(f"Error processing CSV: {e}")
+        import traceback
+        logging.error(traceback.format_exc())
         return []
 
 def run_pdf_generation(image_paths):
@@ -385,4 +428,4 @@ def main():
         sys.exit(1)
 
 if __name__ == "__main__":
-    main() 
+    main()
