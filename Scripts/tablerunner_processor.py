@@ -76,9 +76,10 @@ def process_tablerunners():
     try:
         logger.info("Starting table runner processing...")
         
-        # Get script directory
+        # Get script directory and go up one level to find Download folder
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        download_base = os.path.join(script_dir, "Download")
+        project_root = os.path.dirname(script_dir)  # Go up one level from Scripts to project root
+        download_base = os.path.join(project_root, "Download")
         
         # Find the most recent download folder (same logic as source3.jsx)
         if not os.path.exists(download_base):
