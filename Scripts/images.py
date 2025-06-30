@@ -20,8 +20,9 @@ from config import BASE_FOLDER, DOWNLOAD_BASE_FOLDER, OUTPUT_BASE_FOLDER, BUCKET
 import shutil
 import re
 from bag_s3_uploader import upload_bag_files_to_s3
-from tissue_s3_uploader import upload_tissue_files_to_s3  # NEW: Added tissue uploader import
-import traceback  # NEW: Added for better error logging
+from tissue_s3_uploader import upload_tissue_files_to_s3
+from tablerunner_s3_uploader import upload_tablerunner_files_to_s3  # NEW: Added table runner uploader import
+import traceback
 
 # Load environment variables
 load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
@@ -53,7 +54,7 @@ logging.basicConfig(
     ]
 )
 
-logger = logging.getLogger(__name__)  # NEW: Added logger variable
+logger = logging.getLogger(__name__)
 
 # Load Shopify credentials from environment variables to avoid committing secrets
 SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
@@ -118,7 +119,7 @@ def ensure_photoshop_closed():
 def run_photoshop_jsx():
     """Run the Photoshop JSX script with proper error handling."""
     try:
-        ensure_photeshop_closed()
+        ensure_photoshop_closed()
         
         photoshop_exe = find_photoshop()
         jsx_script_path = os.path.join(os.path.dirname(__file__), "source3.jsx")
@@ -214,7 +215,7 @@ def upload_photoshop_outputs(output_folder, aa_id: str | None = None):
     print(f"Scanning {output_folder} for output files...")
     
     # Define the order of image types for consistent processing
-    image_types = ['hero', 'rolled', '011', '05-(2)', '04-(2)', 'bag1', 'bag2', 'bag3']
+    image_types = ['hero', 'rolled', '011', '05-(2)', '04-(2)', 'bag1', 'bag2', 'bag3', 'tissue1', 'tissue2', 'tissue3', 'tablerunner1', 'tablerunner2', 'tablerunner3']
     
     # First, collect all files and sort them by type
     files_by_type = {type: [] for type in image_types}
@@ -239,6 +240,18 @@ def upload_photoshop_outputs(output_folder, aa_id: str | None = None):
                     image_type = 'bag2'
                 elif '_bag3.png' in file:
                     image_type = 'bag3'
+                elif '_tissue1.png' in file:
+                    image_type = 'tissue1'
+                elif '_tissue2.png' in file:
+                    image_type = 'tissue2'
+                elif '_tissue3.png' in file:
+                    image_type = 'tissue3'
+                elif '_tablerunner1.png' in file:
+                    image_type = 'tablerunner1'
+                elif '_tablerunner2.png' in file:
+                    image_type = 'tablerunner2'
+                elif '_tablerunner3.png' in file:
+                    image_type = 'tablerunner3'
                 
                 if image_type:
                     files_by_type[image_type].append(os.path.join(root, file))
@@ -460,7 +473,7 @@ def process_images(csv_data):
                 else:
                     logging.warning(f"Bag processor script not found at {bag_processor_path}; skipping bag step")
 
-                # NEW: Add tissue processing here
+                # Tissue processing
                 logger.info("Starting tissue processing...")
                 try:
                     # Get the script directory
@@ -516,9 +529,66 @@ def process_images(csv_data):
                     logger.error("Tissue processing timed out after 15 minutes")
                 except Exception as e:
                     logger.error(f"Error in tissue processing: {e}")
-                    # Don't fail the entire process if tissue processing fails
 
-                # After all Photoshop work (regular + (attempted) bags + tissue) is done,
+                # NEW: Table runner processing
+                logger.info("Starting table runner processing...")
+                try:
+                    # Get the script directory
+                    script_dir = os.path.dirname(os.path.abspath(__file__))
+                    tablerunner_processor_path = os.path.join(script_dir, "tablerunner_processor.py")
+                    
+                    if os.path.exists(tablerunner_processor_path):
+                        # Run table runner processor as a subprocess
+                        result = subprocess.run([
+                            sys.executable, tablerunner_processor_path
+                        ], capture_output=True, text=True, timeout=900)  # 15 minute timeout
+                        
+                        if result.returncode == 0:
+                            logger.info("Table runner processing completed successfully")
+                            
+                            # Upload table runner files to S3 with SKUs
+                            logger.info("Starting table runner file upload to S3...")
+                            try:
+                                # Pass the products data so we can use the Shopify SKUs
+                                tablerunner_uploads = upload_tablerunner_files_to_s3(output_folder, processed_products)
+                                
+                                if tablerunner_uploads:
+                                    logger.info(f"Successfully uploaded {len(tablerunner_uploads)} table runner files to S3")
+                                    
+                                    # Log the SKUs for reference
+                                    for upload in tablerunner_uploads:
+                                        logger.info(f"Uploaded table runner: {upload['sku']} -> {upload['public_url']}")
+                                        
+                                    # Add table runner upload info to processed products for tracking
+                                    for upload in tablerunner_uploads:
+                                        processed_products.append({
+                                            "file": upload['original_file'],
+                                            "url": upload['public_url'],
+                                            "type": "tablerunner_output",
+                                            "sku": upload['sku'],
+                                            "base_sku": upload['base_sku'],
+                                            "tablerunner_type": upload.get('tablerunner_type', 'unknown'),
+                                            "product_name": upload['product_name']
+                                        })
+                                else:
+                                    logger.warning("No table runner files were uploaded to S3")
+                                    
+                            except Exception as upload_error:
+                                logger.error(f"Error uploading table runner files to S3: {upload_error}")
+                        
+                        else:
+                            logger.error(f"Table runner processing failed with return code {result.returncode}")
+                            logger.error(f"Table runner processor stderr: {result.stderr}")
+                    else:
+                        logger.warning(f"Table runner processor not found at: {tablerunner_processor_path}")
+                        
+                except subprocess.TimeoutExpired:
+                    logger.error("Table runner processing timed out after 15 minutes")
+                except Exception as e:
+                    logger.error(f"Error in table runner processing: {e}")
+                    # Don't fail the entire process if table runner processing fails
+
+                # After all Photoshop work (regular + (attempted) bags + tissue + table runners) is done,
                 # upload every PNG once so there are no duplicates.
                 all_outputs = upload_photoshop_outputs(
                     output_folder,
@@ -531,7 +601,7 @@ def process_images(csv_data):
             except Exception as bag_err:
                 logging.error(f"Unexpected error while running bag processor: {bag_err}")
 
-        # NEW: Create CSV file list (from paste.txt)
+        # Create CSV file list
         csv_path = os.path.join(BASE_FOLDER, 'printpanels', 'csv', 'meta_file_list.csv')
         os.makedirs(os.path.dirname(csv_path), exist_ok=True)
         
@@ -558,8 +628,8 @@ def process_images(csv_data):
 
     except Exception as e:
         logger.error(f"Error in process_images: {e}")
-        logger.error(traceback.format_exc())  # NEW: Added traceback for better error debugging
-        return False  # NEW: Return False on error
+        logger.error(traceback.format_exc())
+        return False
 
 if __name__ == "__main__":
     try:
