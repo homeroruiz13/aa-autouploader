@@ -1,17 +1,26 @@
 import requests
 import json
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Load Shopify credentials from environment variables
 SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
 SHOPIFY_PASSWORD = os.getenv('SHOPIFY_PASSWORD')
 SHOPIFY_STORE_NAME = os.getenv('SHOPIFY_STORE')
+SHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION', '2025-01')  # Default to 2025-01
 
 # Validate env vars
 if not all([SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE_NAME]):
     raise RuntimeError("Missing one or more required Shopify environment variables: SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE")
 
-SHOPIFY_API_BASE = f"https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/2023-04"
+SHOPIFY_API_BASE = f"https://{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/{SHOPIFY_API_VERSION}"
+SHOPIFY_HEADERS = {
+    'X-Shopify-Access-Token': SHOPIFY_PASSWORD,
+    'Content-Type': 'application/json'
+}
 
 def check_product_metafields(handle):
     """Check all metafields for a product by handle"""
@@ -19,7 +28,7 @@ def check_product_metafields(handle):
     # First get the product
     url = f'{SHOPIFY_API_BASE}/products.json?handle={handle}'
     try:
-        response = requests.get(url, timeout=30)
+        response = requests.get(url, headers=SHOPIFY_HEADERS, timeout=30)
         response.raise_for_status()
         products = response.json().get('products', [])
         
@@ -33,7 +42,7 @@ def check_product_metafields(handle):
         
         # Get all metafields for this product
         metafields_url = f'{SHOPIFY_API_BASE}/products/{product_id}/metafields.json'
-        meta_response = requests.get(metafields_url, timeout=30)
+        meta_response = requests.get(metafields_url, headers=SHOPIFY_HEADERS, timeout=30)
         meta_response.raise_for_status()
         metafields = meta_response.json().get('metafields', [])
         
@@ -71,8 +80,8 @@ if __name__ == "__main__":
     print("🔍 SHOPIFY METAFIELD CHECKER")
     print("=" * 60)
     
-    # Check the Panda Test product
-    check_product_metafields("panda-test")
+    # Check the Tiny Roar product
+    check_product_metafields("tiny-roar")
     
     print("\n" + "=" * 60)
     print("✅ Check complete!")

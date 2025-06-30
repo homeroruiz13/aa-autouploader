@@ -118,4 +118,14 @@ Scripts/__pycache__/
 # Exclude backup of previous git history
 # -.git_bak_large/
 # +.git_bak_large/
-# +.git_bak_secrets/ 
+# +.git_bak_secrets/
+
+# Ignore CSVs and raster image outputs (kept only essential)
+*.csv
+*.png
+*.jpg
+*.jpeg
+
+# Re-allow the operational meta lists
+!printpanels/csv/meta_file_list.csv
+!printpanels/csv/meta_file_list_tableRunner.csv 

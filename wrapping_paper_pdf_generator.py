@@ -11,9 +11,9 @@ available.
 
 Usage examples
 --------------
-python wrapping_paper_pdf_generator.py -i .\Download\AA605282.png
-python wrapping_paper_pdf_generator.py -i img1.png img2.png -o .\Output -f .\Footer.pdf
-python wrapping_paper_pdf_generator.py -i img1.png --tablerunner -o .\Output\Tablerunner
+python wrapping_paper_pdf_generator.py -i .\\Download\\AA605282.png
+python wrapping_paper_pdf_generator.py -i img1.png img2.png -o .\\Output -f .\\Footer.pdf
+python wrapping_paper_pdf_generator.py -i img1.png --tablerunner -o .\\Output\\Tablerunner
 
 Required third-party packages
 ----------------------------

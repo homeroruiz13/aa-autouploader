@@ -19,9 +19,10 @@ from botocore.exceptions import ClientError
 from config import BASE_FOLDER, DOWNLOAD_BASE_FOLDER, OUTPUT_BASE_FOLDER, BUCKET_NAME
 import shutil
 import re
+from bag_s3_uploader import upload_bag_files_to_s3
 
 # Load environment variables
-load_dotenv()
+load_dotenv(dotenv_path=os.path.join(os.path.dirname(__file__), '..', '.env'))
 
 # Initialize the boto3 S3 client using environment variables
 s3 = boto3.client(
@@ -54,13 +55,17 @@ logging.basicConfig(
 SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
 SHOPIFY_PASSWORD = os.getenv('SHOPIFY_PASSWORD')
 SHOPIFY_STORE_NAME = os.getenv('SHOPIFY_STORE')
+SHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION', '2025-01')  # Default to 2025-01
+
 # Construct the base URL only if all variables are present
 if not all([SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE_NAME]):
     raise RuntimeError("Missing one or more required Shopify environment variables: SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE")
 
-SHOPIFY_API_BASE = (
-    f"https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/2023-04"
-)
+SHOPIFY_API_BASE = f"https://{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/{SHOPIFY_API_VERSION}"
+SHOPIFY_HEADERS = {
+    'X-Shopify-Access-Token': SHOPIFY_PASSWORD,
+    'Content-Type': 'application/json'
+}
 
 # --------------------------------------------------------------
 # Helper: derive Shopify-style handle from a product name
@@ -205,7 +210,7 @@ def upload_photoshop_outputs(output_folder, aa_id: str | None = None):
     print(f"Scanning {output_folder} for output files...")
     
     # Define the order of image types for consistent processing
-    image_types = ['hero', 'rolled', '011', '05-(2)', '04-(2)']
+    image_types = ['hero', 'rolled', '011', '05-(2)', '04-(2)', 'bag1', 'bag2', 'bag3']
     
     # First, collect all files and sort them by type
     files_by_type = {type: [] for type in image_types}
@@ -224,6 +229,12 @@ def upload_photoshop_outputs(output_folder, aa_id: str | None = None):
                     image_type = '05-(2)'
                 elif '_04-(2).png' in file:
                     image_type = '04-(2)'
+                elif '_bag1.png' in file:
+                    image_type = 'bag1'
+                elif '_bag2.png' in file:
+                    image_type = 'bag2'
+                elif '_bag3.png' in file:
+                    image_type = 'bag3'
                 
                 if image_type:
                     files_by_type[image_type].append(os.path.join(root, file))
@@ -270,14 +281,14 @@ def fetch_aa_id_from_shopify(product_handle: str) -> str | None:
     """Return AA product ID (basesku metafield) for a Shopify product handle, or None."""
     try:
         url = f"{SHOPIFY_API_BASE}/products.json?handle={product_handle}"
-        resp = requests.get(url, timeout=15)
+        resp = requests.get(url, headers=SHOPIFY_HEADERS, timeout=15)
         resp.raise_for_status()
         products = resp.json().get('products', [])
         if not products:
             return None
         product_id = products[0]['id']
         metafields_url = f"{SHOPIFY_API_BASE}/products/{product_id}/metafields.json"
-        mf_resp = requests.get(metafields_url, timeout=15)
+        mf_resp = requests.get(metafields_url, headers=SHOPIFY_HEADERS, timeout=15)
         mf_resp.raise_for_status()
         for mf in mf_resp.json().get('metafields', []):
             if mf.get('namespace') == 'custom' and mf.get('key') in ('basesku', 'base_sku'):
@@ -387,11 +398,76 @@ def process_images(csv_data):
             logging.error("Photoshop processing failed – continuing without Photoshop outputs")
         else:
             logging.info("PHOTOSHOP_COMPLETE")
-            photoshop_outputs = upload_photoshop_outputs(
-                output_folder,
-                aa_id=base_sku if base_sku.startswith('AA') else None
-            )
-            processed_products.extend(photoshop_outputs)
+            
+            # ----------------------------------------------------------
+            # Run dedicated bag-processing pipeline (creates 3×3 tiles,
+            # runs bags.jsx and deposits *_bag1.png / *_bag2.png /
+            # *_bag3.png files in the same Output/<ts> directory).
+            # ----------------------------------------------------------
+
+            try:
+                logging.info("Starting bag processing…")
+                bag_processor_path = os.path.join(os.path.dirname(__file__), "bag_processor.py")
+
+                if os.path.exists(bag_processor_path):
+                    result = subprocess.run([sys.executable, bag_processor_path],
+                                            capture_output=True, text=True, timeout=900)
+
+                    if result.returncode == 0:
+                        logging.info("Bag processor finished successfully")
+                        if result.stdout:
+                            logging.debug(result.stdout)
+                            
+                        # NEW: Upload bag files to S3 with SKU naming convention
+                        logging.info("Starting bag file upload to S3...")
+                        try:
+                            # Pass the products data so we can use the Shopify SKUs
+                            bag_uploads = upload_bag_files_to_s3(output_folder, processed_products)
+                            
+                            if bag_uploads:
+                                logging.info(f"Successfully uploaded {len(bag_uploads)} bag files to S3")
+                                
+                                # Log the SKUs for reference
+                                for upload in bag_uploads:
+                                    logging.info(f"Uploaded bag: {upload['sku']} -> {upload['public_url']}")
+                                    
+                                # Add bag upload info to processed products for tracking
+                                for upload in bag_uploads:
+                                    processed_products.append({
+                                        "file": upload['original_file'],
+                                        "url": upload['public_url'],
+                                        "type": "bag_output",
+                                        "sku": upload['sku'],
+                                        "base_sku": upload['base_sku'],
+                                        "bag_type": upload['bag_type'],
+                                        "product_name": upload['product_name']
+                                    })
+                            else:
+                                logging.warning("No bag files were uploaded to S3")
+                                
+                        except Exception as upload_error:
+                            logging.error(f"Error uploading bag files to S3: {upload_error}")
+                            # Don't fail the entire process if bag upload fails
+                            
+                    else:
+                        logging.error(f"Bag processor exited with code {result.returncode}")
+                        if result.stderr:
+                            logging.error(result.stderr)
+                else:
+                    logging.warning(f"Bag processor script not found at {bag_processor_path}; skipping bag step")
+
+                # After all Photoshop work (regular + (attempted) bags) is done,
+                # upload every PNG once so there are no duplicates.
+                all_outputs = upload_photoshop_outputs(
+                    output_folder,
+                    aa_id=base_sku if base_sku.startswith('AA') else None
+                )
+                processed_products.extend(all_outputs)
+
+            except subprocess.TimeoutExpired:
+                logging.error("Bag processor timed-out after 15 minutes – continuing without bag outputs")
+            except Exception as bag_err:
+                logging.error(f"Unexpected error while running bag processor: {bag_err}")
 
         # Even if Photoshop failed we still want to emit whatever information we collected so
         # that the rest of the pipeline (Illustrator print-panel generation, etc.) can proceed.

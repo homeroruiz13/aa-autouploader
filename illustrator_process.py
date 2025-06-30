@@ -32,12 +32,17 @@ BASE_OUTPUT_FOLDER = os.path.join(os.path.dirname(__file__), 'printpanels', 'out
 SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
 SHOPIFY_PASSWORD = os.getenv('SHOPIFY_PASSWORD')
 SHOPIFY_STORE_NAME = os.getenv('SHOPIFY_STORE')
+SHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION', '2025-01')  # Default to 2025-01
 
 # Validate env vars
 if not all([SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE_NAME]):
     raise RuntimeError("Missing one or more required Shopify environment variables: SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE")
 
-SHOPIFY_API_BASE = f"https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/2023-04"
+SHOPIFY_API_BASE = f"https://{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/{SHOPIFY_API_VERSION}"
+SHOPIFY_HEADERS = {
+    'X-Shopify-Access-Token': SHOPIFY_PASSWORD,
+    'Content-Type': 'application/json'
+}
 
 # Setup logging
 logging.basicConfig(
@@ -263,13 +268,13 @@ def _get_aa_id_for_handle(handle: str) -> str | None:
     for *handle* or *None* if not available / network error.
     """
     try:
-        resp = requests.get(f"{SHOPIFY_API_BASE}/products.json?handle={handle}", timeout=15)
+        resp = requests.get(f"{SHOPIFY_API_BASE}/products.json?handle={handle}", headers=SHOPIFY_HEADERS, timeout=15)
         resp.raise_for_status()
         products = resp.json().get('products', [])
         if not products:
             return None
         product_id = products[0]['id']
-        resp = requests.get(f"{SHOPIFY_API_BASE}/products/{product_id}/metafields.json", timeout=15)
+        resp = requests.get(f"{SHOPIFY_API_BASE}/products/{product_id}/metafields.json", headers=SHOPIFY_HEADERS, timeout=15)
         resp.raise_for_status()
         for mf in resp.json().get('metafields', []):
             if mf.get('namespace') == 'custom' and mf.get('key') in ('basesku', 'base_sku'):

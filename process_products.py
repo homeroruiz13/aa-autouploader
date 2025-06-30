@@ -4,17 +4,26 @@ import requests
 import logging
 import re
 import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Load Shopify credentials from environment variables
 SHOPIFY_API_KEY = os.getenv('SHOPIFY_API_KEY')
 SHOPIFY_PASSWORD = os.getenv('SHOPIFY_PASSWORD')
 SHOPIFY_STORE_NAME = os.getenv('SHOPIFY_STORE')
+SHOPIFY_API_VERSION = os.getenv('SHOPIFY_API_VERSION', '2025-01')  # Default to 2025-01
 
 # Validate env vars
 if not all([SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE_NAME]):
     raise RuntimeError("Missing one or more required Shopify environment variables: SHOPIFY_API_KEY, SHOPIFY_PASSWORD, SHOPIFY_STORE")
 
-SHOPIFY_API_BASE = f"https://{SHOPIFY_API_KEY}:{SHOPIFY_PASSWORD}@{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/2023-04"
+SHOPIFY_API_BASE = f"https://{SHOPIFY_STORE_NAME}.myshopify.com/admin/api/{SHOPIFY_API_VERSION}"
+SHOPIFY_HEADERS = {
+    'X-Shopify-Access-Token': SHOPIFY_PASSWORD,
+    'Content-Type': 'application/json'
+}
 
 def print_json(data):
     """Print JSON data for the Node.js server to parse"""
@@ -26,7 +35,7 @@ def get_or_create_metafield(product_id, base_sku_value):
     
     # Get all metafields for the product
     metafields_url = f'{SHOPIFY_API_BASE}/products/{product_id}/metafields.json'
-    response = requests.get(metafields_url, timeout=30)
+    response = requests.get(metafields_url, headers=SHOPIFY_HEADERS, timeout=30)
     response.raise_for_status()
     metafields = response.json().get('metafields', [])
     
@@ -86,7 +95,7 @@ def get_or_create_metafield(product_id, base_sku_value):
         
         print_json({"debug": f"Updating metafield {metafield_id} with data: {update_data}"})
         
-        response = requests.put(update_url, json=update_data, timeout=30)
+        response = requests.put(update_url, json=update_data, headers=SHOPIFY_HEADERS, timeout=30)
         print_json({"debug": f"PUT response status: {response.status_code}"})
         print_json({"debug": f"PUT response body: {response.text}"})
         
@@ -121,7 +130,7 @@ def get_or_create_metafield(product_id, base_sku_value):
         
         print_json({"debug": f"Creating metafield with data: {create_data}"})
         
-        response = requests.post(create_url, json=create_data, timeout=30)
+        response = requests.post(create_url, json=create_data, headers=SHOPIFY_HEADERS, timeout=30)
         print_json({"debug": f"POST response status: {response.status_code}"})
         print_json({"debug": f"POST response body: {response.text}"})
         
@@ -152,7 +161,7 @@ def process_product(product_data):
     # Find the product by handle
     url = f'{SHOPIFY_API_BASE}/products.json?handle={product_handle}'
     try:
-        response = requests.get(url, timeout=30)
+        response = requests.get(url, headers=SHOPIFY_HEADERS, timeout=30)
         response.raise_for_status()
         products = response.json().get('products', [])
         
@@ -181,7 +190,7 @@ def process_product(product_data):
             
             # Verify the update by fetching metafields again
             metafields_url = f'{SHOPIFY_API_BASE}/products/{product_id}/metafields.json'
-            response = requests.get(metafields_url, timeout=30)
+            response = requests.get(metafields_url, headers=SHOPIFY_HEADERS, timeout=30)
             response.raise_for_status()
             metafields = response.json().get('metafields', [])
             
@@ -226,7 +235,7 @@ def process_product_images(product_data, product_id):
     # Fetch existing images once so we can avoid duplicates
     try:
         images_endpoint = f"{SHOPIFY_API_BASE}/products/{product_id}/images.json"
-        resp = requests.get(images_endpoint, timeout=30)
+        resp = requests.get(images_endpoint, headers=SHOPIFY_HEADERS, timeout=30)
         resp.raise_for_status()
         existing_sources = {img.get("src") for img in resp.json().get("images", [])}
     except requests.RequestException as e:
@@ -239,7 +248,7 @@ def process_product_images(product_data, product_id):
             continue
 
         try:
-            resp = requests.post(images_endpoint, json={"image": {"src": url}}, timeout=30)
+            resp = requests.post(images_endpoint, json={"image": {"src": url}}, headers=SHOPIFY_HEADERS, timeout=30)
             if resp.status_code in (200, 201, 202):
                 print_json({"debug": f"Attached mock-up: {url}"})
             else:
