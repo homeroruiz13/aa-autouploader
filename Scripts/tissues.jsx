@@ -41,11 +41,11 @@ if (downloadFolder == null || outputFolder == null) {
     exit();
 }
 
-// Tissue template paths - using the Bags & Tissues folder
+// Tissue template paths - using the correct filenames with spaces
 var tissueTemplatePaths = [
-    { path: scriptDir + "/Bags & Tissues/Tissue1.psd", name: "tissue1", tileType: "6x6" },
-    { path: scriptDir + "/Bags & Tissues/Tissue2.psd", name: "tissue2", tileType: "6x6" },
-    { path: scriptDir + "/Bags & Tissues/Tissue3.psd", name: "tissue3", tileType: "6x6" }
+    { path: scriptDir + "/Bags & Tissues/Tissue 1.psd", name: "tissue1", tileType: "6x6" },
+    { path: scriptDir + "/Bags & Tissues/Tissue 2.psd", name: "tissue2", tileType: "6x6" },
+    { path: scriptDir + "/Bags & Tissues/Tissue 3.psd", name: "tissue3", tileType: "6x6" }
 ];
 
 // Look for pattern files
