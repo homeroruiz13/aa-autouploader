@@ -206,12 +206,12 @@ def process_csv(csv_path):
                                 logging.debug(f"  Checking: {variation}")
                                 if os.path.exists(image_path):
                                     image_paths.append(image_path)
-                                    logging.info(f"✓ Found image: {image_path}")
+                                    logging.info(f"Found image: {image_path}")
                                     found = True
                                     break
 
                         if not found:
-                            logging.warning(f"✗ No local image found for: {product_name}")
+                            logging.warning(f"No local image found for: {product_name}")
                             logging.warning(f"  Tried variations: {unique_names}")
                             
                             # As a fallback, try to download from S3 URL if available
@@ -228,7 +228,7 @@ def process_csv(csv_path):
                                         f.write(response.content)
                                     
                                     image_paths.append(temp_path)
-                                    logging.info(f"✓ Downloaded and saved: {temp_path}")
+                                    logging.info(f"Downloaded and saved: {temp_path}")
                                     found = True
                                     
                                 except Exception as download_error:

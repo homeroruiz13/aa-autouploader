@@ -119,7 +119,7 @@ def run_bag_jsx():
             cwd=script_dir
         )
         
-        stdout, stderr = process.communicate(timeout=600)  # 10 minute timeout
+        stdout, stderr = process.communicate(timeout=900)  # 15 minute timeout
         
         if stdout:
             logger.info(f"Photoshop output: {stdout.decode()}")
@@ -130,7 +130,7 @@ def run_bag_jsx():
         return process.returncode == 0
         
     except subprocess.TimeoutExpired:
-        logger.error("Bag processing timed out after 10 minutes")
+        logger.error("Bag processing timed out after 15 minutes")
         process.kill()
         return False
     except Exception as e:

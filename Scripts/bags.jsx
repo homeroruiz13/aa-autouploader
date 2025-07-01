@@ -4,7 +4,6 @@
 function getMostRecentFolder(basePath) {
     var folder = new Folder(basePath);
     if (!folder.exists) {
-        alert("Base folder not found: " + basePath);
         return null;
     }
 
@@ -13,7 +12,6 @@ function getMostRecentFolder(basePath) {
     });
 
     if (subfolders.length === 0) {
-        alert("No valid subfolders with the correct format found in: " + basePath);
         return null;
     }
 
@@ -28,55 +26,76 @@ function getMostRecentFolder(basePath) {
 var scriptFile = new File($.fileName);
 var scriptDir = scriptFile.parent;
 
-// Define your base paths for Download and Output relative to the script
-var downloadBasePath = scriptDir + "/Download";
-var outputBasePath = scriptDir + "/Output";
+// Define your base paths for Download and Output relative to the script's parent directory (aa-auto)
+var downloadBasePath = scriptDir.parent + "/Download";
+var outputBasePath = scriptDir.parent + "/Output";
 
 // Get the most recent Download and Output folders
 var downloadFolder = getMostRecentFolder(downloadBasePath);
 var outputFolder = getMostRecentFolder(outputBasePath);
 
 if (downloadFolder == null || outputFolder == null) {
-    alert("Error: Could not locate the most recent Download or Output folder.");
-    exit();
-}
+    // Exit silently if folders not found
+} else {
+    // Suppress ALL possible dialogs and warnings - COMPLETE AUTOMATION
+    app.displayDialogs = DialogModes.NO;
+    app.playbackDisplayDialogs = DialogModes.NO;
+    app.preferences.showEnglishFontNames = true;
+    app.preferences.askBeforeClosingUnsavedDocument = false;
+    // Additional safety measures to prevent any save dialogs
+    try {
+        app.preferences.askBeforeSavingLayeredTIFF = false;
+    } catch (e) {}
+    try {
+        app.preferences.askBeforeClosingUnsavedDocument = false;
+    } catch (e) {}
+    var originalRulerUnits = app.preferences.rulerUnits;
+    var originalTypeUnits = app.preferences.typeUnits;
+    app.preferences.rulerUnits = Units.PIXELS;
+    app.preferences.typeUnits = TypeUnits.PIXELS;
+    // Updated bag template paths - using all 7 bag templates
+    var bagTemplatePaths = [
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 1.psd", name: "bag1", tileType: "3x3" },
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 2.psd", name: "bag2", tileType: "6x6" },
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 3.psd", name: "bag3", tileType: "3x3" },
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 4.psd", name: "bag4", tileType: "4x4" },
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 5.psd", name: "bag5", tileType: "4x4" },
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 6.psd", name: "bag6", tileType: "4x4" },
+        { path: scriptDir.parent + "/Bags & Tissues/Bag 7.psd", name: "bag7", tileType: "3x3" }
+    ];
 
-// Updated bag template paths - using all 7 bag templates
-var bagTemplatePaths = [
-    { path: scriptDir + "/Bags & Tissues/Bag 1.psd", name: "bag1", tileType: "3x3" },
-    { path: scriptDir + "/Bags & Tissues/Bag 2.psd", name: "bag2", tileType: "6x6" },
-    { path: scriptDir + "/Bags & Tissues/Bag 3.psd", name: "bag3", tileType: "3x3" },
-    { path: scriptDir + "/Bags & Tissues/Bag 4.psd", name: "bag4", tileType: "4x4" },
-    { path: scriptDir + "/Bags & Tissues/Bag 5.psd", name: "bag5", tileType: "4x4" },
-    { path: scriptDir + "/Bags & Tissues/Bag 6.psd", name: "bag6", tileType: "4x4" },
-    { path: scriptDir + "/Bags & Tissues/Bag 7.psd", name: "bag7", tileType: "3x3" }
-];
+    // Look for pattern files
+    var patternFiles = Folder(downloadFolder).getFiles("*.png");
 
-// Look for pattern files
-var patternFiles = Folder(downloadFolder).getFiles("*.png");
-
-// Process each pattern file with appropriate bag templates
-for (var i = 0; i < patternFiles.length; i++) {
-    var patternFile = patternFiles[i];
-    var baseName = patternFile.name.replace(".png", "");
-    
-    // Process with different bag templates based on tile requirements
-    for (var j = 0; j < bagTemplatePaths.length; j++) {
-        var bagConfig = bagTemplatePaths[j];
+    // Process each pattern file with appropriate bag templates
+    for (var i = 0; i < patternFiles.length; i++) {
+        var patternFile = patternFiles[i];
+        var baseName = patternFile.name.replace(".png", "");
         
-        // Match pattern files to bag requirements
-        if ((bagConfig.tileType === "6x6" && baseName.slice(-2) === "_6") ||
-            (bagConfig.tileType === "3x3" && baseName.slice(-2) === "_3") ||
-            (bagConfig.tileType === "4x4" && baseName.slice(-2) === "_4")) {
+        // Process with different bag templates based on tile requirements
+        for (var j = 0; j < bagTemplatePaths.length; j++) {
+            var bagConfig = bagTemplatePaths[j];
             
-            processBagTemplate(bagConfig.path, patternFile.fsName, outputFolder.fsName, baseName, bagConfig.name);
+            // Match pattern files to bag requirements
+            if ((bagConfig.tileType === "6x6" && baseName.slice(-2) === "_6") ||
+                (bagConfig.tileType === "3x3" && baseName.slice(-2) === "_3") ||
+                (bagConfig.tileType === "4x4" && baseName.slice(-2) === "_4")) {
+                
+                processBagTemplate(bagConfig.path, patternFile.fsName, outputFolder.fsName, baseName, bagConfig.name);
+            }
         }
     }
-}
 
-// Quit Photoshop
-var idquit = charIDToTypeID("quit");
-executeAction(idquit, undefined, DialogModes.ALL);
+    // Restore preferences and quit Photoshop without dialogs
+    try {
+        app.preferences.rulerUnits = originalRulerUnits;
+        app.preferences.typeUnits = originalTypeUnits;
+    } catch (e) {
+        // Continue if preference restore fails
+    }
+    var idquit = charIDToTypeID("quit");
+    executeAction(idquit, undefined, DialogModes.NO);
+}
 
 // Helper function to process bag templates (with error fixes)
 function processBagTemplate(templatePath, patternPath, outputFolder, baseName, bagType) {
@@ -84,76 +103,74 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
     var smartObjectDoc = null;
     var patternDoc = null;
     
+    // Use minimal dialog suppression like the working mockup script
+    
     try {
         var templateFile = new File(templatePath);
         if (!templateFile.exists) {
-            alert("Template file not found: " + templatePath);
             return;
         }
 
         templateDoc = app.open(templateFile);
-        var targetLayer = null;
         
-        // Find the target layer based on bag type
-        if (bagType === "bag1") {
-            targetLayer = findLayerRecursive(templateDoc, "CHANGE DESIGN HERE");
-        } else if (bagType === "bag2") {
-            var bag2Group = findLayerRecursive(templateDoc, "Bag 2");
-            if (bag2Group) {
-                targetLayer = findLayerRecursive(bag2Group, "CHANGE DESIGN HERE");
-            }
-        } else if (bagType === "bag3") {
-            var bag3Group = findLayerRecursive(templateDoc, "Bag 3");
-            if (bag3Group) {
-                targetLayer = findLayerRecursive(bag3Group, "CHANGE DESIGN");
-            }
-        } else if (bagType === "bag4") {
-            var bag4Group = findLayerRecursive(templateDoc, "Bag 4");
-            if (bag4Group) {
-                targetLayer = findLayerRecursive(bag4Group, "CHANGE DESIGN HERE");
-            }
-        } else if (bagType === "bag5") {
-            var bag5Group = findLayerRecursive(templateDoc, "Bag 5");
-            if (bag5Group) {
-                targetLayer = findLayerRecursive(bag5Group, "CHANGE DESIGN HERE");
-            }
-        } else if (bagType === "bag6") {
-            var bag6Group = findLayerRecursive(templateDoc, "Bag 6");
-            if (bag6Group) {
-                targetLayer = findLayerRecursive(bag6Group, "CHANGE DESIGN HERE");
-            }
-        } else if (bagType === "bag7") {
-            // Bag 7 might have different layer structure - adjust as needed
-            targetLayer = findLayerRecursive(templateDoc, "CHANGE DESIGN HERE");
-            // Or if it's in a group:
-            // var bag7Group = findLayerRecursive(templateDoc, "Bag 7");
-            // if (bag7Group) {
-            //     targetLayer = findLayerRecursive(bag7Group, "CHANGE DESIGN HERE");
-            // }
+        // Ensure we don't have document save conflicts
+        try {
+            templateDoc.changeMode(ChangeMode.RGB);
+        } catch (e) {
+            // Continue if mode change fails
         }
         
+        // Debug: Log all layers in the template
+        // Removed alert to prevent hanging in non-interactive mode
+        // logAllLayers(templateDoc, "");
+        
+        var targetLayer = null;
+        
+        // Simplified layer detection - find any smart object or editable layer
+        targetLayer = findSmartObjectLayer(templateDoc) ||
+                     findLayerRecursive(templateDoc, "CHANGE DESIGN HERE") ||
+                     findLayerRecursive(templateDoc, "Your Design Here") ||
+                     findLayerRecursive(templateDoc, "DESIGN HERE") ||
+                     findLayerRecursive(templateDoc, "Smart Object");
+        
         if (!targetLayer) {
-            alert("Target layer not found for " + bagType + " in template: " + templatePath);
+            // Target layer not found - skip this template
             templateDoc.close(SaveOptions.DONOTSAVECHANGES);
             return;
         }
+
+        // Continue processing with found target layer
 
         // Store original visibility and make layer visible
         var originalVisibility = targetLayer.visible;
         targetLayer.visible = true;
         templateDoc.activeLayer = targetLayer;
 
-        // Open the Smart Object
-        var idplacedLayerEditContents = stringIDToTypeID("placedLayerEditContents");
-        var desc = new ActionDescriptor();
-        executeAction(idplacedLayerEditContents, desc, DialogModes.NO);
+        // Check if it's actually a smart object before trying to edit contents
+        var isSmartObject = false;
+        try {
+            if (targetLayer.kind && targetLayer.kind == LayerKind.SMARTOBJECT) {
+                isSmartObject = true;
+            }
+        } catch (e) {
+            // Not a smart object, continue with regular processing
+        }
 
-        smartObjectDoc = app.activeDocument;
+        if (isSmartObject) {
+            // Open the Smart Object
+            var idplacedLayerEditContents = stringIDToTypeID("placedLayerEditContents");
+            var desc = new ActionDescriptor();
+            executeAction(idplacedLayerEditContents, desc, DialogModes.NO);
+
+            smartObjectDoc = app.activeDocument;
+        } else {
+            // If not a smart object, work directly with the layer
+            smartObjectDoc = templateDoc;
+        }
         
-        // Open pattern file
+        // Open pattern file (following exact working mockup pattern)
         var patternFile = new File(patternPath);
         if (!patternFile.exists) {
-            alert("Pattern file not found: " + patternPath);
             smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES);
             templateDoc.close(SaveOptions.DONOTSAVECHANGES);
             return;
@@ -161,155 +178,92 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
         
         patternDoc = app.open(patternFile);
         
+        // Get the bounds of the smart object (following working pattern)
+        var boundingBox = smartObjectDoc.layers[0].bounds;
+        var boundingBoxWidth = boundingBox[2] - boundingBox[0];
+        var boundingBoxHeight = boundingBox[3] - boundingBox[1];
+        
+        // Calculate scale factor based on bag type (following working pattern logic)
+        var scaleFactor;
+        if (bagType === "bag1") {
+            // For bag1, target specific dimensions
+            var widthRatio = 1554 / patternDoc.width;
+            var heightRatio = 1440 / patternDoc.height;
+            scaleFactor = Math.max(widthRatio, heightRatio) * 100;
+        } else if (bagType === "bag2") {
+            // For bag2 (6x6), use bounds-based scaling
+            var widthRatio = boundingBoxWidth / patternDoc.width;
+            var heightRatio = boundingBoxHeight / patternDoc.height;
+            scaleFactor = Math.max(widthRatio, heightRatio) * 100;
+        } else {
+            // For other bags, use bounds-based scaling
+            var widthRatio = boundingBoxWidth / patternDoc.width;
+            var heightRatio = boundingBoxHeight / patternDoc.height;
+            scaleFactor = Math.max(widthRatio, heightRatio) * 100;
+        }
+        
+        // Resize the PATTERN DOCUMENT before copying (critical difference!)
+        patternDoc.resizeImage(null, null, scaleFactor, ResampleMethod.BICUBIC);
+        
         // Copy pattern content
         patternDoc.selection.selectAll();
         patternDoc.selection.copy();
         patternDoc.close(SaveOptions.DONOTSAVECHANGES);
         patternDoc = null;
         
-        // Switch back to Smart Object and clear existing content safely
+        // Switch back to Smart Object and follow working pattern
         app.activeDocument = smartObjectDoc;
-        
-        // FIXED: Safer method to clear existing layers
-        try {
-            // Remove all layers except the background layer
-            while (smartObjectDoc.artLayers.length > 1) {
-                smartObjectDoc.artLayers[0].remove();
-            }
-        } catch (removeError) {
-            // If we can't remove layers, try selecting all and filling with transparency
-            try {
-                smartObjectDoc.selection.selectAll();
-                var fillColor = new SolidColor();
-                fillColor.rgb.red = 255;
-                fillColor.rgb.green = 255;
-                fillColor.rgb.blue = 255;
-                smartObjectDoc.selection.fill(fillColor);
-            } catch (fillError) {
-                // If that fails too, just proceed with paste (will overlay)
-            }
-        }
-        
-        // Paste the pattern
+        var newLayer = smartObjectDoc.artLayers.add();
+        newLayer.move(smartObjectDoc.layers[0], ElementPlacement.PLACEBEFORE);
         smartObjectDoc.paste();
-        var currentLayer = smartObjectDoc.activeLayer;
         
-        // Apply transforms based on bag type
+        // Center the pattern (following working mockup pattern)
+        var deltaX = (boundingBoxWidth - newLayer.bounds[2] + newLayer.bounds[0]) / 2;
+        var deltaY = (boundingBoxHeight - newLayer.bounds[3] + newLayer.bounds[1]) / 2;
+        
+        // Apply position adjustments based on bag type
         if (bagType === "bag1") {
-            // Bag 1 transforms
-            var targetWidth = 1554;
-            var targetHeight = 1440;
-            var targetX = -187;
-            var targetY = -583;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
-            
-        } else if (bagType === "bag2") {
-            // Bag 2 transforms
-            var targetWidth = 1897;
-            var targetHeight = 1897;
-            var targetX = -151;
-            var targetY = -391;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
-            
-        } else if (bagType === "bag3") {
-            // Bag 3 transforms
-            var targetWidth = 1250;
-            var targetHeight = 1250;
-            var targetX = -128;
-            var targetY = -481;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
-            
-            // Hide the paper layer if it exists
-            var paperLayer = findLayerRecursive(templateDoc, "midsummer-grovepainted-paper-524010 copia");
-            if (paperLayer) {
-                paperLayer.visible = false;
-            }
-        } else if (bagType === "bag4") {
-            // Bag 4 transforms (from your original bags2_1.py)
-            var targetWidth = 919;
-            var targetHeight = 918;
-            var targetX = -36;
-            var targetY = -41;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
-            
-        } else if (bagType === "bag5") {
-            // Bag 5 transforms (same as Bag 4 for now, adjust if needed)
-            var targetWidth = 919;
-            var targetHeight = 918;
-            var targetX = -36;
-            var targetY = -41;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
-            
-        } else if (bagType === "bag6") {
-            // Bag 6 transforms (same as Bag 4/5 for now, adjust if needed)
-            var targetWidth = 919;
-            var targetHeight = 918;
-            var targetX = -36;
-            var targetY = -41;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
-            
-        } else if (bagType === "bag7") {
-            // Bag 7 transforms (from your bag7maker.py)
-            var targetWidth = 408;
-            var targetHeight = 408;
-            var targetX = -48;
-            var targetY = -4;
-            
-            var width = currentLayer.bounds[2] - currentLayer.bounds[0];
-            var height = currentLayer.bounds[3] - currentLayer.bounds[1];
-            var widthRatio = targetWidth / width * 100;
-            var heightRatio = targetHeight / height * 100;
-            
-            currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
-            currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
+            newLayer.translate(boundingBox[0] + deltaX - 187, boundingBox[1] + deltaY - 583);
+        } else {
+            newLayer.translate(boundingBox[0] + deltaX, boundingBox[1] + deltaY);
         }
         
-        // Save and close Smart Object
-        smartObjectDoc.save();
-        smartObjectDoc.close(SaveOptions.SAVECHANGES);
-        smartObjectDoc = null;
+        // Clean up and save
+        if (smartObjectDoc.layers.length > 1) {
+            smartObjectDoc.layers[1].remove();
+        }
+
+        // Save and close Smart Object using the working pattern from table runners
+        if (isSmartObject) {
+            try {
+                // Try complex save first (like table runners)
+                var saveOptions = new PhotoshopSaveOptions();
+                saveOptions.embedColorProfile = true;
+                saveOptions.maximizeCompatibility = true;
+                smartObjectDoc.saveAs(smartObjectDoc.fullName, saveOptions, true);
+                smartObjectDoc.close(SaveOptions.SAVECHANGES);
+            } catch (e) {
+                // If save fails, try simpler approach (like mockups)
+                try {
+                    smartObjectDoc.save();
+                    smartObjectDoc.close(SaveOptions.SAVECHANGES);
+                } catch (closeError) {
+                    // Final fallback
+                    try {
+                        smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES);
+                    } catch (finalError) {
+                        // Continue if everything fails
+                    }
+                }
+            }
+        } else {
+            // For regular layers, don't save
+            try {
+                smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES);
+            } catch (e) {
+                // Continue if close fails
+            }
+        }
         
         // Restore original visibility
         targetLayer.visible = originalVisibility;
@@ -318,19 +272,29 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
         var outputFileName = baseName.replace(/_[0-9]$/, "") + "_" + bagType + ".png";
         var outputFilePath = outputFolder + "\\" + outputFileName;
         
+        // Delete existing file if it exists to prevent overwrite dialog
+        var outputFile = new File(outputFilePath);
+        if (outputFile.exists) {
+            try {
+                outputFile.remove();
+            } catch (e) {
+                // Continue if file can't be deleted
+            }
+        }
+        
         var exportOptions = new ExportOptionsSaveForWeb();
         exportOptions.format = SaveDocumentType.PNG;
         exportOptions.PNG8 = false;
         exportOptions.quality = 100;
+        exportOptions.includeProfile = false;
+        exportOptions.optimized = true;
         
-        templateDoc.exportDocument(new File(outputFilePath), ExportType.SAVEFORWEB, exportOptions);
+        templateDoc.exportDocument(outputFile, ExportType.SAVEFORWEB, exportOptions);
         
         templateDoc.close(SaveOptions.DONOTSAVECHANGES);
         templateDoc = null;
         
     } catch (error) {
-        alert("Failed to process " + bagType + " with pattern '" + patternPath + "': " + error.toString());
-        
         // Clean up any open documents
         try {
             if (patternDoc) patternDoc.close(SaveOptions.DONOTSAVECHANGES);
@@ -361,4 +325,108 @@ function findLayerRecursive(layerContainer, layerName) {
         }
     }
     return null;
+}
+
+// Helper function to find a smart object layer
+function findSmartObjectLayer(doc) {
+    try {
+        // Check art layers first
+        for (var i = 0; i < doc.artLayers.length; i++) {
+            var layer = doc.artLayers[i];
+            if (layer.kind && layer.kind == LayerKind.SMARTOBJECT) {
+                return layer;
+            }
+        }
+        
+        // Check layer sets recursively
+        for (var i = 0; i < doc.layerSets.length; i++) {
+            var found = findSmartObjectInLayerSet(doc.layerSets[i]);
+            if (found) return found;
+        }
+    } catch (e) {
+        // If we can't access layer properties, return null
+    }
+    return null;
+}
+
+// Helper function to find smart object in layer sets recursively
+function findSmartObjectInLayerSet(layerSet) {
+    try {
+        // Check art layers in this set
+        for (var i = 0; i < layerSet.artLayers.length; i++) {
+            var layer = layerSet.artLayers[i];
+            if (layer.kind && layer.kind == LayerKind.SMARTOBJECT) {
+                return layer;
+            }
+        }
+        
+        // Check nested layer sets
+        for (var i = 0; i < layerSet.layerSets.length; i++) {
+            var found = findSmartObjectInLayerSet(layerSet.layerSets[i]);
+            if (found) return found;
+        }
+    } catch (e) {
+        // If we can't access layer properties, continue
+    }
+    return null;
+}
+
+// Debug function to log all layers in a document
+function logAllLayers(doc, indent) {
+    var layerInfo = "";
+    try {
+        // Log art layers
+        for (var i = 0; i < doc.artLayers.length; i++) {
+            var layer = doc.artLayers[i];
+            var layerType = "ArtLayer";
+            try {
+                if (layer.kind == LayerKind.SMARTOBJECT) {
+                    layerType = "SmartObject";
+                }
+            } catch (e) {}
+            layerInfo += indent + "- " + layer.name + " (" + layerType + ")\n";
+        }
+        
+        // Log layer sets
+        for (var i = 0; i < doc.layerSets.length; i++) {
+            var layerSet = doc.layerSets[i];
+            layerInfo += indent + "+ " + layerSet.name + " (LayerSet)\n";
+            layerInfo += logAllLayersInSet(layerSet, indent + "  ");
+        }
+    } catch (e) {
+        layerInfo += indent + "Error reading layers: " + e.toString() + "\n";
+    }
+    
+    if (indent === "") {
+                    // Layer info logged to console
+    }
+    return layerInfo;
+}
+
+// Helper function to log layers in a layer set
+function logAllLayersInSet(layerSet, indent) {
+    var layerInfo = "";
+    try {
+        // Log art layers in this set
+        for (var i = 0; i < layerSet.artLayers.length; i++) {
+            var layer = layerSet.artLayers[i];
+            var layerType = "ArtLayer";
+            try {
+                if (layer.kind == LayerKind.SMARTOBJECT) {
+                    layerType = "SmartObject";
+                }
+            } catch (e) {}
+            layerInfo += indent + "- " + layer.name + " (" + layerType + ")\n";
+        }
+        
+        // Log nested layer sets
+        for (var i = 0; i < layerSet.layerSets.length; i++) {
+            var nestedSet = layerSet.layerSets[i];
+            layerInfo += indent + "+ " + nestedSet.name + " (LayerSet)\n";
+            layerInfo += logAllLayersInSet(nestedSet, indent + "  ");
+        }
+    } catch (e) {
+        layerInfo += indent + "Error reading layer set: " + e.toString() + "\n";
+    }
+    return layerInfo;
 }

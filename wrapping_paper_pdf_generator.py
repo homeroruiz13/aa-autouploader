@@ -32,6 +32,7 @@ import os
 import sys
 from datetime import datetime
 from typing import List
+from pathlib import Path
 
 # Ensure we can print Unicode characters even when stdout is captured by a
 # Windows process that defaults to a legacy codepage (e.g. cp1252).  By
@@ -210,10 +211,10 @@ def create_tiled_image_pdf(
         doc.save(output_pdf_path)
         doc.close()
         os.remove(temp_scaled)
-        print(f"  ✓ Tiled PDF saved: {output_pdf_path}")
+        print(f"  Tiled PDF saved: {output_pdf_path}")
         return True
     except Exception as exc:
-        print(f"  ✗ Error creating tiled PDF: {exc}")
+        print(f"  Error creating tiled PDF: {exc}")
         return False
 
 
@@ -246,7 +247,7 @@ def overlay_footer_and_add_text(
             footer_rect = fitz.Rect(0, template_height - footer_height, template_width, template_height)
             base_page.show_pdf_page(footer_rect, footer_doc, 0)
             footer_doc.close()
-            print("  ✓ Footer embedded at high quality")
+            print("  Footer embedded at high quality")
         else:
             print(f"  ⚠ Footer not found at {footer_path}, using placeholder")
             placeholder = fitz.Rect(0, template_height - footer_height, template_width, template_height)
@@ -324,7 +325,7 @@ def overlay_footer_and_add_text(
 def process_wrapping_paper(image_path: str, output_dir: str, footer_path: str) -> None:
     """Generate 6 ft and 15 ft wrapping-paper variants for a single input image."""
     if not os.path.exists(image_path):
-        print(f"✗ Image file not found: {image_path}")
+        print(f"Image file not found: {image_path}")
         return
 
     base_name = os.path.splitext(os.path.basename(image_path))[0]
@@ -364,13 +365,15 @@ def process_wrapping_paper(image_path: str, output_dir: str, footer_path: str) -
             barcode_15ft,
         )
 
-    print(f"\n✓ Completed wrapping paper processing: {base_name}")
+    print(f"\nCompleted wrapping paper processing: {base_name}")
+    print("")
+    print("  WRAPPING PAPER PDF generation complete!")
 
 
 def process_tablerunner(image_path: str, output_dir: str, footer_path: str) -> None:
     """Generate 15 ft and 30 ft tablerunner variants for a single input image."""
     if not os.path.exists(image_path):
-        print(f"✗ Image file not found: {image_path}")
+        print(f"Image file not found: {image_path}")
         return
 
     base_name = os.path.splitext(os.path.basename(image_path))[0]
@@ -422,7 +425,9 @@ def process_tablerunner(image_path: str, output_dir: str, footer_path: str) -> N
             barcode_30ft,
         )
 
-    print(f"\n✓ Completed tablerunner processing: {base_name}")
+    print(f"\nCompleted tablerunner processing: {base_name}")
+    print("")
+    print("  TABLERUNNER PDF generation complete!")
 
 
 def process_image(image_path: str, output_dir: str, footer_path: str, is_tablerunner: bool = False) -> None:

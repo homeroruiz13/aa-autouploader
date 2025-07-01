@@ -118,7 +118,7 @@ def upload_bag_files_to_s3(output_folder, products_data, bucket_name='aspenarlo'
                     continue
                 
                 # Get the base SKU from Shopify product data
-                base_sku = product_data.get('sku') or product_data.get('shopify_sku')
+                base_sku = product_data.get('sku') or product_data.get('shopify_sku') or product_data.get('base_sku')
                 if not base_sku:
                     logger.error(f"No SKU found in product data for {filename}, skipping")
                     continue
