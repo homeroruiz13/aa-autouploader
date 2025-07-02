@@ -36,6 +36,10 @@ var outputBasePath = scriptDir.parent + "/Output";
 var downloadFolder = getMostRecentFolder(downloadBasePath);
 var outputFolder = getMostRecentFolder(outputBasePath);
 
+// NEW: Suppress dialogs early so all subsequent actions run without alerts
+var originalDialogs = app.displayDialogs;
+app.displayDialogs = DialogModes.NO;
+
 if (downloadFolder == null || outputFolder == null) {
     $.writeln("Error: Could not locate the most recent Download or Output folder.");
     var idquit = charIDToTypeID("quit");
@@ -154,16 +158,10 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
                 app.activeDocument = smartObjectDoc;
                 try {
                     if (smartObjectDoc.artLayers.length > 1) {
-                        while (smartObjectDoc.artLayers.length > 1) {
-                            try { smartObjectDoc.artLayers[0].remove(); } catch (removeError) { break; }
+                        // Instead of deleting layers (which can trigger the alert), just hide them
+                        for (var li = 0; li < smartObjectDoc.artLayers.length - 1; li++) {
+                            try { smartObjectDoc.artLayers[li].visible = false; } catch (visErr) {}
                         }
-                    } else if (smartObjectDoc.artLayers.length === 1) {
-                        try {
-                            smartObjectDoc.selection.selectAll();
-                            if (smartObjectDoc.selection && smartObjectDoc.selection.bounds) {
-                                smartObjectDoc.selection.clear();
-                            }
-                        } catch (e) {}
                     }
                 } catch (removeError) {
                     $.writeln("Bag 7: Error clearing layers in group: " + bagGroups[gi] + ": " + removeError);
@@ -230,13 +228,8 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
                 var desc = new ActionDescriptor();
                 executeAction(idplacedLayerEditContents, desc, DialogModes.NO);
                 smartObjectDoc = app.activeDocument;
-                var patternFile = new File(patternPath.replace(/(_bag[0-9]+)?\.png$/, bagSuffixes[gi]));
-                if (!patternFile.exists) {
-                    $.writeln("Bag 7: PNG not found: " + patternFile.fsName);
-                    try { smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES); } catch (e) {}
-                    try { templateDoc.close(SaveOptions.DONOTSAVECHANGES); } catch (e) {}
-                    continue;
-                }
+                // Always use the original patternPath (e.g. *_3.png) for each group. We no longer look for *_bagX variations.
+                var patternFile = new File(patternPath);
                 patternDoc = app.open(patternFile);
                 patternDoc.selection.selectAll();
                 patternDoc.selection.copy();
@@ -249,12 +242,8 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
                             try { smartObjectDoc.artLayers[0].remove(); } catch (removeError) { break; }
                         }
                     } else if (smartObjectDoc.artLayers.length === 1) {
-                        try {
-                            smartObjectDoc.selection.selectAll();
-                            if (smartObjectDoc.selection && smartObjectDoc.selection.bounds) {
-                                smartObjectDoc.selection.clear();
-                            }
-                        } catch (e) {}
+                        // Skip selection.clear to avoid Photoshop alert
+                        // smartObjectDoc.selection.selectAll();
                     }
                 } catch (removeError) {
                     $.writeln("Bag 7: Error clearing layers in group: " + bagGroups[gi] + ": " + removeError);
@@ -275,20 +264,20 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
                 targetLayer.visible = originalVisibility;
             }
             if (!foundAny) {
-                $.writeln("Bag 7: No valid groups/Smart Objects found, skipping export.");
+                $.writeln("Bag 7: No group-based layers processed – falling back to simple Bag 7 logic.");
                 try { templateDoc.close(SaveOptions.DONOTSAVECHANGES); } catch (e) {}
+            } else {
+                var outputFileName = baseName.replace(/_[0-9]$/, "") + "_" + bagType + ".png";
+                var outputFilePath = outputFolder + "\\" + outputFileName;
+                var exportOptions = new ExportOptionsSaveForWeb();
+                exportOptions.format = SaveDocumentType.PNG;
+                exportOptions.PNG8 = false;
+                exportOptions.quality = 100;
+                templateDoc.exportDocument(new File(outputFilePath), ExportType.SAVEFORWEB, exportOptions);
+                templateDoc.close(SaveOptions.DONOTSAVECHANGES);
+                templateDoc = null;
                 return;
             }
-            var outputFileName = baseName.replace(/_[0-9]$/, "") + "_" + bagType + ".png";
-            var outputFilePath = outputFolder + "\\" + outputFileName;
-            var exportOptions = new ExportOptionsSaveForWeb();
-            exportOptions.format = SaveDocumentType.PNG;
-            exportOptions.PNG8 = false;
-            exportOptions.quality = 100;
-            templateDoc.exportDocument(new File(outputFilePath), ExportType.SAVEFORWEB, exportOptions);
-            templateDoc.close(SaveOptions.DONOTSAVECHANGES);
-            templateDoc = null;
-            return;
         }
         
         if (!targetLayer) {
@@ -462,17 +451,10 @@ function processBagTemplate(templatePath, patternPath, outputFolder, baseName, b
                 app.activeDocument = smartObjectDoc;
                 try {
                     if (smartObjectDoc.artLayers.length > 1) {
-                        while (smartObjectDoc.artLayers.length > 1) {
-                            try { smartObjectDoc.artLayers[0].remove(); } catch (removeError) { break; }
+                        // Instead of deleting layers (which can trigger the alert), just hide them
+                        for (var li = 0; li < smartObjectDoc.artLayers.length - 1; li++) {
+                            try { smartObjectDoc.artLayers[li].visible = false; } catch (visErr) {}
                         }
-                    } else if (smartObjectDoc.artLayers.length === 1) {
-                        // Only one layer, just select all and clear (if possible), then paste
-                        try {
-                            smartObjectDoc.selection.selectAll();
-                            if (smartObjectDoc.selection && smartObjectDoc.selection.bounds) {
-                                smartObjectDoc.selection.clear();
-                            }
-                        } catch (e) {}
                     }
                 } catch (removeError) {
                     try { smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES); } catch (e) {}
@@ -581,10 +563,6 @@ function findLayerRecursive(layerContainer, layerName) {
     }
     return null;
 }
-
-// Suppress all Photoshop dialogs to prevent alerts
-var originalDialogs = app.displayDialogs;
-app.displayDialogs = DialogModes.NO;
 
 // At very end of script, before quitting Photoshop
 app.displayDialogs = originalDialogs;
