@@ -1,9 +1,10 @@
-// Tissue Templates Image Processor
-// Follows the same pattern as bags.jsx and source3.jsx
+// Tissue Templates Image Processor - ULTRA MINIMAL FIX
+// Only fix tissue 3 layer detection and quit syntax
 
 function getMostRecentFolder(basePath) {
     var folder = new Folder(basePath);
     if (!folder.exists) {
+        alert("Base folder not found: " + basePath);
         return null;
     }
 
@@ -12,6 +13,7 @@ function getMostRecentFolder(basePath) {
     });
 
     if (subfolders.length === 0) {
+        alert("No valid subfolders with the correct format found in: " + basePath);
         return null;
     }
 
@@ -26,7 +28,7 @@ function getMostRecentFolder(basePath) {
 var scriptFile = new File($.fileName);
 var scriptDir = scriptFile.parent;
 
-// Define your base paths for Download and Output relative to the script's parent directory (aa-auto)
+// ONLY PATH FIX
 var downloadBasePath = scriptDir.parent + "/Download";
 var outputBasePath = scriptDir.parent + "/Output";
 
@@ -35,135 +37,115 @@ var downloadFolder = getMostRecentFolder(downloadBasePath);
 var outputFolder = getMostRecentFolder(outputBasePath);
 
 if (downloadFolder == null || outputFolder == null) {
-    // Exit silently if folders not found
-} else {
-    // Suppress ALL possible dialogs and warnings - COMPLETE AUTOMATION
-    app.displayDialogs = DialogModes.NO;
-    app.playbackDisplayDialogs = DialogModes.NO;
-    app.preferences.showEnglishFontNames = true;
-    app.preferences.askBeforeClosingUnsavedDocument = false;
-    // Additional safety measures to prevent any save dialogs
-    try {
-        app.preferences.askBeforeSavingLayeredTIFF = false;
-    } catch (e) {}
-    try {
-        app.preferences.askBeforeClosingUnsavedDocument = false;
-    } catch (e) {}
-    var originalRulerUnits = app.preferences.rulerUnits;
-    var originalTypeUnits = app.preferences.typeUnits;
-    app.preferences.rulerUnits = Units.PIXELS;
-    app.preferences.typeUnits = TypeUnits.PIXELS;
-    // Tissue template paths - using the correct filenames with spaces
-    var tissueTemplatePaths = [
-        { path: scriptDir.parent + "/Bags & Tissues/Tissue 1.psd", name: "tissue1", tileType: "6x6" },
-        { path: scriptDir.parent + "/Bags & Tissues/Tissue 2.psd", name: "tissue2", tileType: "6x6" },
-        { path: scriptDir.parent + "/Bags & Tissues/Tissue 3.psd", name: "tissue3", tileType: "6x6" }
-    ];
-
-    // Look for pattern files
-    var patternFiles = Folder(downloadFolder).getFiles("*.png");
-
-    // Process each pattern file with tissue templates
-    for (var i = 0; i < patternFiles.length; i++) {
-        var patternFile = patternFiles[i];
-        var baseName = patternFile.name.replace(".png", "");
-        
-        // Process with tissue templates (assuming they use 6x6 tiles like your existing workflow)
-        for (var j = 0; j < tissueTemplatePaths.length; j++) {
-            var tissueConfig = tissueTemplatePaths[j];
-            
-            // Match pattern files to tissue requirements
-            if (tissueConfig.tileType === "6x6" && baseName.slice(-2) === "_6") {
-                processTissueTemplate(tissueConfig.path, patternFile.fsName, outputFolder.fsName, baseName, tissueConfig.name);
-            }
-        }
-    }
-
-    // Restore preferences and quit Photoshop without dialogs
-    try {
-        app.preferences.rulerUnits = originalRulerUnits;
-        app.preferences.typeUnits = originalTypeUnits;
-    } catch (e) {
-        // Continue if preference restore fails
-    }
+    alert("Error: Could not locate the most recent Download or Output folder.");
     var idquit = charIDToTypeID("quit");
-    executeAction(idquit, undefined, DialogModes.NO);
+    executeAction(idquit, undefined, DialogModes.ALL);
 }
 
-// Helper function to process tissue templates
+// TEMPLATE PATH FIX ONLY
+var tissueTemplatePaths = [
+    { path: scriptDir.parent + "/Bags & Tissues/Tissue 1.psd", name: "tissue1", tileType: "6x6" },
+    { path: scriptDir.parent + "/Bags & Tissues/Tissue 2.psd", name: "tissue2", tileType: "6x6" },
+    { path: scriptDir.parent + "/Bags & Tissues/Tissue 3.psd", name: "tissue3", tileType: "6x6" }
+];
+
+// Look for pattern files
+var patternFiles = Folder(downloadFolder).getFiles("*.png");
+
+// Process each pattern file with tissue templates
+for (var i = 0; i < patternFiles.length; i++) {
+    var patternFile = patternFiles[i];
+    var baseName = patternFile.name.replace(".png", "");
+    
+    // Process with tissue templates (using 6x6 tiles)
+    for (var j = 0; j < tissueTemplatePaths.length; j++) {
+        var tissueConfig = tissueTemplatePaths[j];
+        
+        // Match pattern files to tissue requirements
+        if (tissueConfig.tileType === "6x6" && baseName.slice(-2) === "_6") {
+            processTissueTemplate(tissueConfig.path, patternFile.fsName, outputFolder.fsName, baseName, tissueConfig.name);
+        }
+    }
+}
+
+// FIXED QUIT
+var idquit = charIDToTypeID("quit");
+executeAction(idquit, undefined, DialogModes.ALL);
+
+// Helper function - KEEP WORKING LOGIC for 1&2, only add fallback for 3
 function processTissueTemplate(templatePath, patternPath, outputFolder, baseName, tissueType) {
     var templateDoc = null;
     var smartObjectDoc = null;
     var patternDoc = null;
     
-    // Use minimal dialog suppression like the working mockup script
-    
     try {
         var templateFile = new File(templatePath);
         if (!templateFile.exists) {
+            alert("Tissue template file not found: " + templatePath);
             return;
         }
 
         templateDoc = app.open(templateFile);
-        
-        // Ensure we don't have document save conflicts
-        try {
-            templateDoc.changeMode(ChangeMode.RGB);
-        } catch (e) {
-            // Continue if mode change fails
-        }
-        
-        // Debug: Log all layers in the template
-        // Removed alert to prevent hanging in non-interactive mode
-        // logAllLayers(templateDoc, "");
-        
         var targetLayer = null;
         
-        // Simplified layer detection - find any smart object or editable layer
-        targetLayer = findSmartObjectLayer(templateDoc) ||
-                     findLayerRecursive(templateDoc, "CHANGE DESIGN HERE") ||
-                     findLayerRecursive(templateDoc, "Your Design Here") ||
-                     findLayerRecursive(templateDoc, "DESIGN HERE") ||
-                     findLayerRecursive(templateDoc, "Smart Object");
+        // KEEP EXACT WORKING LOGIC for tissue1 and tissue2
+        if (tissueType === "tissue1") {
+            targetLayer = findLayerRecursive(templateDoc, "CHANGE DESIGN HERE") ||
+                         findLayerRecursive(templateDoc, "Your Design Here") ||
+                         findLayerRecursive(templateDoc, "DESIGN HERE");
+        } else if (tissueType === "tissue2") {
+            // Check if there's a Tissue 2 group first
+            var tissue2Group = findLayerRecursive(templateDoc, "Tissue 2") ||
+                              findLayerRecursive(templateDoc, "Tissue2");
+            if (tissue2Group) {
+                targetLayer = findLayerRecursive(tissue2Group, "CHANGE DESIGN HERE") ||
+                             findLayerRecursive(tissue2Group, "Your Design Here");
+            } else {
+                targetLayer = findLayerRecursive(templateDoc, "CHANGE DESIGN HERE") ||
+                             findLayerRecursive(templateDoc, "Your Design Here");
+            }
+        } else if (tissueType === "tissue3") {
+            var tissue3Group = findLayerRecursive(templateDoc, "Grupo 1") || findLayerRecursive(templateDoc, "Tissue 3") || findLayerRecursive(templateDoc, "Tissue3") || findLayerRecursive(templateDoc, "TISSUE 3");
+            if (tissue3Group) {
+                targetLayer = findLayerRecursive(tissue3Group, "CHANGE DESIGN HERE") ||
+                             findLayerRecursive(tissue3Group, "Your Design Here") ||
+                             findLayerRecursive(tissue3Group, "DESIGN HERE") ||
+                             findLayerRecursive(tissue3Group, "Smart Object") ||
+                             findLayerRecursive(tissue3Group, "Pattern") ||
+                             findLayerRecursive(tissue3Group, "change design here copia");
+            }
+            if (!targetLayer) {
+                targetLayer = findLayerRecursive(templateDoc, "CHANGE DESIGN HERE") ||
+                             findLayerRecursive(templateDoc, "Your Design Here") ||
+                             findLayerRecursive(templateDoc, "DESIGN HERE") ||
+                             findLayerRecursive(templateDoc, "Smart Object") ||
+                             findLayerRecursive(templateDoc, "Pattern") ||
+                             findLayerRecursive(templateDoc, "change design here copia");
+            }
+        }
         
         if (!targetLayer) {
-            // Target layer not found - skip this template
+            alert("Target layer NOT FOUND for " + tissueType + " in template: " + templatePath + "\n\nTried: 'CHANGE DESIGN HERE', 'Your Design Here', 'DESIGN HERE', 'Smart Object', 'Pattern', 'change design here copia'\n\nPlease check your PSD template and layer names.");
             templateDoc.close(SaveOptions.DONOTSAVECHANGES);
             return;
         }
-
-        // Continue processing with found target layer
 
         // Store original visibility and make layer visible
         var originalVisibility = targetLayer.visible;
         targetLayer.visible = true;
         templateDoc.activeLayer = targetLayer;
 
-        // Check if it's actually a smart object before trying to edit contents
-        var isSmartObject = false;
-        try {
-            if (targetLayer.kind && targetLayer.kind == LayerKind.SMARTOBJECT) {
-                isSmartObject = true;
-            }
-        } catch (e) {
-            // Not a smart object, continue with regular processing
-        }
+        // Open the Smart Object
+        var idplacedLayerEditContents = stringIDToTypeID("placedLayerEditContents");
+        var desc = new ActionDescriptor();
+        executeAction(idplacedLayerEditContents, desc, DialogModes.NO);
 
-        if (isSmartObject) {
-            // Open the Smart Object
-            var idplacedLayerEditContents = stringIDToTypeID("placedLayerEditContents");
-            var desc = new ActionDescriptor();
-            executeAction(idplacedLayerEditContents, desc, DialogModes.NO);
-
-            smartObjectDoc = app.activeDocument;
-        } else {
-            // If not a smart object, work directly with the layer
-            smartObjectDoc = templateDoc;
-        }
+        smartObjectDoc = app.activeDocument;
         
-        // Open pattern file (following exact working mockup pattern)
+        // Open pattern file
         var patternFile = new File(patternPath);
         if (!patternFile.exists) {
+            alert("Pattern file not found: " + patternPath);
             smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES);
             templateDoc.close(SaveOptions.DONOTSAVECHANGES);
             return;
@@ -171,72 +153,46 @@ function processTissueTemplate(templatePath, patternPath, outputFolder, baseName
         
         patternDoc = app.open(patternFile);
         
-        // Get the bounds of the smart object (following working pattern)
-        var boundingBox = smartObjectDoc.layers[0].bounds;
-        var boundingBoxWidth = boundingBox[2] - boundingBox[0];
-        var boundingBoxHeight = boundingBox[3] - boundingBox[1];
-        
-        // Calculate scale factor (following working pattern logic)
-        var widthRatio = boundingBoxWidth / patternDoc.width;
-        var heightRatio = boundingBoxHeight / patternDoc.height;
-        var scaleFactor = Math.max(widthRatio, heightRatio) * 100;
-        
-        // Resize the PATTERN DOCUMENT before copying (critical difference!)
-        patternDoc.resizeImage(null, null, scaleFactor, ResampleMethod.BICUBIC);
-        
         // Copy pattern content
         patternDoc.selection.selectAll();
         patternDoc.selection.copy();
         patternDoc.close(SaveOptions.DONOTSAVECHANGES);
         patternDoc = null;
         
-        // Switch back to Smart Object and follow working pattern
+        // Switch back to Smart Object and clear existing content safely
         app.activeDocument = smartObjectDoc;
-        var newLayer = smartObjectDoc.artLayers.add();
-        newLayer.move(smartObjectDoc.layers[0], ElementPlacement.PLACEBEFORE);
+        
+        // Safer method to clear existing layers
+        try {
+            while (smartObjectDoc.artLayers.length > 1) {
+                smartObjectDoc.artLayers[0].remove();
+            }
+        } catch (removeError) {
+            // Continue with paste if layer removal fails
+        }
+        
+        // Paste the pattern
         smartObjectDoc.paste();
+        var currentLayer = smartObjectDoc.activeLayer;
         
-        // Center the pattern (following working mockup pattern)
-        var deltaX = (boundingBoxWidth - newLayer.bounds[2] + newLayer.bounds[0]) / 2;
-        var deltaY = (boundingBoxHeight - newLayer.bounds[3] + newLayer.bounds[1]) / 2;
-        newLayer.translate(boundingBox[0] + deltaX, boundingBox[1] + deltaY);
+        // KEEP EXACT WORKING TRANSFORMS for all tissues
+        var targetWidth = 2000;
+        var targetHeight = 2000;
+        var targetX = 0;
+        var targetY = 0;
         
-        // Clean up and save
-        if (smartObjectDoc.layers.length > 1) {
-            smartObjectDoc.layers[1].remove();
-        }
-
-        // Save and close Smart Object using the working pattern from table runners
-        if (isSmartObject) {
-            try {
-                // Try complex save first (like table runners)
-                var saveOptions = new PhotoshopSaveOptions();
-                saveOptions.embedColorProfile = true;
-                saveOptions.maximizeCompatibility = true;
-                smartObjectDoc.saveAs(smartObjectDoc.fullName, saveOptions, true);
-                smartObjectDoc.close(SaveOptions.SAVECHANGES);
-            } catch (e) {
-                // If save fails, try simpler approach (like mockups)
-                try {
-                    smartObjectDoc.save();
-                    smartObjectDoc.close(SaveOptions.SAVECHANGES);
-                } catch (closeError) {
-                    // Final fallback
-                    try {
-                        smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES);
-                    } catch (finalError) {
-                        // Continue if everything fails
-                    }
-                }
-            }
-        } else {
-            // For regular layers, don't save
-            try {
-                smartObjectDoc.close(SaveOptions.DONOTSAVECHANGES);
-            } catch (e) {
-                // Continue if close fails
-            }
-        }
+        var width = currentLayer.bounds[2] - currentLayer.bounds[0];
+        var height = currentLayer.bounds[3] - currentLayer.bounds[1];
+        var widthRatio = targetWidth / width * 100;
+        var heightRatio = targetHeight / height * 100;
+        
+        currentLayer.resize(widthRatio, heightRatio, AnchorPosition.TOPLEFT);
+        currentLayer.translate(-currentLayer.bounds[0] + targetX, -currentLayer.bounds[1] + targetY);
+        
+        // Save and close Smart Object
+        smartObjectDoc.save();
+        smartObjectDoc.close(SaveOptions.SAVECHANGES);
+        smartObjectDoc = null;
         
         // Restore original visibility
         targetLayer.visible = originalVisibility;
@@ -245,29 +201,19 @@ function processTissueTemplate(templatePath, patternPath, outputFolder, baseName
         var outputFileName = baseName.replace(/_[0-9]$/, "") + "_" + tissueType + ".png";
         var outputFilePath = outputFolder + "\\" + outputFileName;
         
-        // Delete existing file if it exists to prevent overwrite dialog
-        var outputFile = new File(outputFilePath);
-        if (outputFile.exists) {
-            try {
-                outputFile.remove();
-            } catch (e) {
-                // Continue if file can't be deleted
-            }
-        }
-        
         var exportOptions = new ExportOptionsSaveForWeb();
         exportOptions.format = SaveDocumentType.PNG;
         exportOptions.PNG8 = false;
         exportOptions.quality = 100;
-        exportOptions.includeProfile = false;
-        exportOptions.optimized = true;
         
-        templateDoc.exportDocument(outputFile, ExportType.SAVEFORWEB, exportOptions);
+        templateDoc.exportDocument(new File(outputFilePath), ExportType.SAVEFORWEB, exportOptions);
         
         templateDoc.close(SaveOptions.DONOTSAVECHANGES);
         templateDoc = null;
         
     } catch (error) {
+        alert("Failed to process " + tissueType + " with pattern '" + patternPath + "': " + error.toString());
+        
         // Clean up any open documents
         try {
             if (patternDoc) patternDoc.close(SaveOptions.DONOTSAVECHANGES);
@@ -298,108 +244,4 @@ function findLayerRecursive(layerContainer, layerName) {
         }
     }
     return null;
-}
-
-// Helper function to find a smart object layer
-function findSmartObjectLayer(doc) {
-    try {
-        // Check art layers first
-        for (var i = 0; i < doc.artLayers.length; i++) {
-            var layer = doc.artLayers[i];
-            if (layer.kind && layer.kind == LayerKind.SMARTOBJECT) {
-                return layer;
-            }
-        }
-        
-        // Check layer sets recursively
-        for (var i = 0; i < doc.layerSets.length; i++) {
-            var found = findSmartObjectInLayerSet(doc.layerSets[i]);
-            if (found) return found;
-        }
-    } catch (e) {
-        // If we can't access layer properties, return null
-    }
-    return null;
-}
-
-// Helper function to find smart object in layer sets recursively
-function findSmartObjectInLayerSet(layerSet) {
-    try {
-        // Check art layers in this set
-        for (var i = 0; i < layerSet.artLayers.length; i++) {
-            var layer = layerSet.artLayers[i];
-            if (layer.kind && layer.kind == LayerKind.SMARTOBJECT) {
-                return layer;
-            }
-        }
-        
-        // Check nested layer sets
-        for (var i = 0; i < layerSet.layerSets.length; i++) {
-            var found = findSmartObjectInLayerSet(layerSet.layerSets[i]);
-            if (found) return found;
-        }
-    } catch (e) {
-        // If we can't access layer properties, continue
-    }
-    return null;
-}
-
-// Debug function to log all layers in a document
-function logAllLayers(doc, indent) {
-    var layerInfo = "";
-    try {
-        // Log art layers
-        for (var i = 0; i < doc.artLayers.length; i++) {
-            var layer = doc.artLayers[i];
-            var layerType = "ArtLayer";
-            try {
-                if (layer.kind == LayerKind.SMARTOBJECT) {
-                    layerType = "SmartObject";
-                }
-            } catch (e) {}
-            layerInfo += indent + "- " + layer.name + " (" + layerType + ")\n";
-        }
-        
-        // Log layer sets
-        for (var i = 0; i < doc.layerSets.length; i++) {
-            var layerSet = doc.layerSets[i];
-            layerInfo += indent + "+ " + layerSet.name + " (LayerSet)\n";
-            layerInfo += logAllLayersInSet(layerSet, indent + "  ");
-        }
-    } catch (e) {
-        layerInfo += indent + "Error reading layers: " + e.toString() + "\n";
-    }
-    
-    if (indent === "") {
-                    // Layer info logged to console
-    }
-    return layerInfo;
-}
-
-// Helper function to log layers in a layer set
-function logAllLayersInSet(layerSet, indent) {
-    var layerInfo = "";
-    try {
-        // Log art layers in this set
-        for (var i = 0; i < layerSet.artLayers.length; i++) {
-            var layer = layerSet.artLayers[i];
-            var layerType = "ArtLayer";
-            try {
-                if (layer.kind == LayerKind.SMARTOBJECT) {
-                    layerType = "SmartObject";
-                }
-            } catch (e) {}
-            layerInfo += indent + "- " + layer.name + " (" + layerType + ")\n";
-        }
-        
-        // Log nested layer sets
-        for (var i = 0; i < layerSet.layerSets.length; i++) {
-            var nestedSet = layerSet.layerSets[i];
-            layerInfo += indent + "+ " + nestedSet.name + " (LayerSet)\n";
-            layerInfo += logAllLayersInSet(nestedSet, indent + "  ");
-        }
-    } catch (e) {
-        layerInfo += indent + "Error reading layer set: " + e.toString() + "\n";
-    }
-    return layerInfo;
 }

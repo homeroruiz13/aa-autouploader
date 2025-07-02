@@ -1,20 +1,3 @@
-#!C:\Program Files\Python313\python.exe
-"""Bag pattern tiling + Photoshop automation for Bag 1–3 templates.
-
-This script is invoked by *Scripts/images.py* after the regular wrapping-paper
-Photoshop pass.  It performs three steps:
-
-1. Locate the most-recent Download folder created earlier in the run.
-2. Build 3 × 3 tiled versions ( *_3.png* ) of every original design image it
-   finds there (the 6 × 6 tiles already exist from the main pipeline).
-3. Launch Photoshop with *bags.jsx* which applies each tile to Bag 1, Bag 2 and
-   Bag 3 PSD templates and exports *_bag1.png*, *_bag2.png* & *_bag3.png* files
-   into the matching Output/<timestamp>/ folder.
-
-The script is intentionally self-contained so failures here never abort the
-wrapping-paper workflow – *images.py* treats a non-zero exit as non-fatal.
-"""
-
 import os
 import sys
 import subprocess
@@ -31,15 +14,15 @@ logger = logging.getLogger(__name__)
 
 def create_bag_tiles(download_folder):
     """
-    Create 3x3, 4x4, and 6x6 tiled versions of images for bag processing.
-    Your existing workflow already creates 6x6 tiles, we need to add 3x3 and 4x4.
+    Create 3x3 and 4x4 tiled versions of images for bag processing.
+    Uses smaller, more manageable tile sizes to avoid memory issues.
     """
     logger.info(f"Creating bag tiles from images in: {download_folder}")
     
-    # Find all original PNG files (not the _6 tiled ones)
+    # Find all original PNG files (not the _6, _3, or _4 tiled ones)
     original_files = []
     for file in os.listdir(download_folder):
-        if file.endswith('.png') and not file.endswith('_6.png'):
+        if file.endswith('.png') and not any(file.endswith(f'_{i}.png') for i in [3, 4, 6]):
             original_files.append(os.path.join(download_folder, file))
     
     logger.info(f"Found {len(original_files)} original images to process")
@@ -49,6 +32,13 @@ def create_bag_tiles(download_folder):
         try:
             # Open the original image
             with Image.open(original_file) as img:
+                # Resize original image to manageable size first to avoid memory issues
+                max_dimension = 1000  # Limit individual tile to 1000px max
+                if img.width > max_dimension or img.height > max_dimension:
+                    ratio = min(max_dimension / img.width, max_dimension / img.height)
+                    new_size = (int(img.width * ratio), int(img.height * ratio))
+                    img = img.resize(new_size, Image.Resampling.LANCZOS)
+                
                 width, height = img.size
                 base_name = os.path.splitext(os.path.basename(original_file))[0]
                 
@@ -59,7 +49,7 @@ def create_bag_tiles(download_folder):
                         tiled_3x3.paste(img, (i * width, j * height))
                 
                 tiled_3x3_file = os.path.join(download_folder, f"{base_name}_3.png")
-                tiled_3x3.save(tiled_3x3_file)
+                tiled_3x3.save(tiled_3x3_file, optimize=True)
                 created_tiles.append(tiled_3x3_file)
                 logger.info(f"Created 3x3 tile: {tiled_3x3_file}")
                 
@@ -70,7 +60,7 @@ def create_bag_tiles(download_folder):
                         tiled_4x4.paste(img, (i * width, j * height))
                 
                 tiled_4x4_file = os.path.join(download_folder, f"{base_name}_4.png")
-                tiled_4x4.save(tiled_4x4_file)
+                tiled_4x4.save(tiled_4x4_file, optimize=True)
                 created_tiles.append(tiled_4x4_file)
                 logger.info(f"Created 4x4 tile: {tiled_4x4_file}")
                 
@@ -81,10 +71,10 @@ def create_bag_tiles(download_folder):
 
 def run_bag_jsx():
     """
-    Execute the bag processing JSX script, following the same pattern as your source3.jsx execution.
+    Execute the bag processing JSX script with better error handling.
     """
     try:
-        # Get script directory (same as your source3.jsx)
+        # Get script directory
         script_dir = os.path.dirname(os.path.abspath(__file__))
         jsx_script_path = os.path.join(script_dir, "bags.jsx")
         
@@ -92,7 +82,7 @@ def run_bag_jsx():
             logger.error(f"Bag JSX script not found at: {jsx_script_path}")
             return False
         
-        # Find Photoshop executable (same logic as your existing code)
+        # Find Photoshop executable
         photoshop_paths = [
             r"C:\Program Files\Adobe\Adobe Photoshop 2025\Photoshop.exe",
             r"C:\Program Files\Adobe\Adobe Photoshop 2024\Photoshop.exe",
@@ -111,9 +101,16 @@ def run_bag_jsx():
         
         logger.info(f"Executing bag JSX script with Photoshop: {photoshop_exe}")
         
-        # Run the script (Photoshop will quit itself via the JSX)
+        # Close any existing Photoshop processes first
+        try:
+            subprocess.run(['taskkill', '/f', '/im', 'Photoshop.exe'], 
+                          stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        except:
+            pass
+        
+        # Run the script with longer timeout
         process = subprocess.Popen(
-            [photoshop_exe, jsx_script_path],
+            [photoshop_exe, '-r', jsx_script_path],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             cwd=script_dir
@@ -139,17 +136,18 @@ def run_bag_jsx():
 
 def process_bags():
     """
-    Main function to process bags. This follows the same pattern as your existing workflow.
+    Main function to process bags with corrected paths.
     """
     try:
         logger.info("Starting bag processing...")
         
-        # Get script directory and go up one level to find Download folder
+        # Get script directory - this is Scripts folder
         script_dir = os.path.dirname(os.path.abspath(__file__))
-        project_root = os.path.dirname(script_dir)  # Go up one level from Scripts to project root
+        # Go up one level to get to the project root (aa-auto)
+        project_root = os.path.dirname(script_dir)
         download_base = os.path.join(project_root, "Download")
         
-        # Find the most recent download folder (same logic as source3.jsx)
+        # Find the most recent download folder
         if not os.path.exists(download_base):
             logger.error(f"Download base folder not found: {download_base}")
             return False
@@ -169,12 +167,18 @@ def process_bags():
         
         logger.info(f"Using download folder: {most_recent_folder}")
         
-        # Create 3x3 and 4x4 tiles (your workflow already creates 6x6)
+        # Create 3x3 and 4x4 tiles with size optimization
         created_tiles = create_bag_tiles(most_recent_folder)
         
         if not created_tiles:
-            logger.warning("No 3x3 tiles were created")
-            return False
+            logger.warning("No tiles were created - checking for existing tiles")
+            # Check if tiles already exist
+            existing_tiles = [f for f in os.listdir(most_recent_folder) 
+                            if f.endswith('_3.png') or f.endswith('_4.png')]
+            if not existing_tiles:
+                logger.error("No bag tiles found")
+                return False
+            logger.info(f"Found {len(existing_tiles)} existing tiles")
         
         # Run the bag JSX script
         success = run_bag_jsx()
